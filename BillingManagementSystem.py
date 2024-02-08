@@ -1,4 +1,7 @@
 from tkinter import *
-from 
-def Home():
-    return 0
+from math import *
+#def Homee():
+#def Billing():
+#def Stock():
+#def Stock_Update():
+#def Search():
