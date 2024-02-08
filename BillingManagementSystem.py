@@ -1,4 +1,5 @@
 from tkinter import *
-from 
+from math import *
 def Home():
+    print("Hello")
     return 0
