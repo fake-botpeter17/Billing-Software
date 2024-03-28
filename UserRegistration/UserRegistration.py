@@ -2,7 +2,8 @@ from psycopg2 import *
 from bcrypt import gensalt, hashpw
 from pickle import load,dump 
 from secrets import token_urlsafe
-def  UserRegistration(Num :int,host_ :str= '192.168.137.1',Db :str= 'BMS',usr :str='postgres',pwd :str= 'Nebinson@1',Port :str='5432'):
+import os
+def  UserRegistration(Num :int,host_ :str= "{}".format(os.getenv('Database_Host')),Db :str= "{}".format(os.getenv('Database_Name')),usr :str="{}".format(os.getenv("Database_User")),pwd :str= "{}".format(os.getenv('Database_Pwd')),Port :str="{}".format(os.getenv("Database_Port"))):
     try:
         con=connect(host=host_, database=Db ,user=usr ,password=pwd, port = Port)#Establishing Connection to the Server
     except:
@@ -28,4 +29,3 @@ def  UserRegistration(Num :int,host_ :str= '192.168.137.1',Db :str= 'BMS',usr :s
     g=open("E://PETER//BILLING-SOFTWARE//BillingInfo.dat","wb")
     dump(data,g)
     g.close()
-UserRegistration(2)

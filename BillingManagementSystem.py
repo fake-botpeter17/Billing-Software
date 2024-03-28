@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import *
 from PyQt6 import uic
 from bcrypt import hashpw
 from pickle import load
+import psycopg2
 import UserRegistration
 import os
 
@@ -30,17 +31,18 @@ import os
 '''
 
 def Init():
-    os.getenv("")
     try:
-        con=connect(host=My_IP(), database = 'BMS',user = 'postgres',password = 'Nebinson@1', port = '5432')#Establishing Connection to the Server
-    except:
-        messagebox.showerror("Authentication Error","Server not reachable!")
+        con=connect(host="{}".format(os.getenv('Database_Host')), database = "{}".format(os.getenv('Database_Name')),user = "{}".format(os.getenv("Database_User")),password ="{}".format(os.getenv('Database_Pwd')), port = "{}".format(os.getenv("Database_Port")))#Establishing Connection to the Server
+    except psycopg2.Error as e:
+        messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
+        messagebox.showinfo("Try opening the program as Administrator")
         exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
+    global cur,Admin
     cur = con.cursor()                                                                                  
     Admin=False
     Login()
 
-def My_IP():
+'''def My_IP():
     output = subprocess.check_output(["ipconfig", "/all"], universal_newlines=True)
     for line in output.split("\n"):
         if line.startswith("IPv4 Address. . . . . . . . . . . :"):
@@ -49,6 +51,7 @@ def My_IP():
     else:
         raise Exception("Failed to find IPv4 address")
     return ip_address
+'''
 
 class MyGUI(QMainWindow):
     def __init__(self):
