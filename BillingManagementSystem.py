@@ -1,11 +1,15 @@
 '''                 IMPORTS                       '''
 
+import subprocess
 from typing import Generator,NoReturn
 from psycopg2 import *
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
 from PyQt6.QtWidgets import *  
 from PyQt6 import uic
-
+from bcrypt import hashpw
+from pickle import load
+import UserRegistration
+import os
 
 '''
     GUI for Login is implemented using Tkinter
@@ -19,12 +23,32 @@ from PyQt6 import uic
     import datetime
     import pyarrow
     import pandas
-    def authentication():
     def Stock():
     def Stock_Update():
     def Search():
     from math import * 
 '''
+
+def Init():
+    os.getenv("")
+    try:
+        con=connect(host=My_IP(), database = 'BMS',user = 'postgres',password = 'Nebinson@1', port = '5432')#Establishing Connection to the Server
+    except:
+        messagebox.showerror("Authentication Error","Server not reachable!")
+        exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
+    cur = con.cursor()                                                                                  
+    Admin=False
+    Login()
+
+def My_IP():
+    output = subprocess.check_output(["ipconfig", "/all"], universal_newlines=True)
+    for line in output.split("\n"):
+        if line.startswith("IPv4 Address. . . . . . . . . . . :"):
+            ip_address = line.split(":")[1].strip()
+            break
+    else:
+        raise Exception("Failed to find IPv4 address")
+    return ip_address
 
 class MyGUI(QMainWindow):
     def __init__(self):
@@ -36,10 +60,7 @@ class MyGUI(QMainWindow):
 def main():
     app = QApplication([])
     window = MyGUI()
-    app.exec_()
-
-if __name__=='__main__':
-    main()
+    app.exec()
 
 def Bill_Number() -> Generator:
     '''
@@ -50,18 +71,23 @@ def Bill_Number() -> Generator:
 
 Bill_No :Generator = Bill_Number()                                  #Memory Efficient way to generate bill no. successively (Generator Object)
 
-def Auth(a :str ,b :str) -> None :
+def Auth(user :str ,pwd :str) -> None :
 
     '''           Getting Authentication Data from Server                '''
     #############  Should Add a way to save current user #####################
     #############               For displaying in GUI                ############################
-    cur.execute("select pwd from users where user={}".format(a))                                            #Not sure about field Name (PWD & User)
-    check=cur.fetchone()
-
+    cur.execute("select * from users where uid='{}'".format(user))                                            #Not sure about field Name (PWD & User)
+    check :tuple|None=cur.fetchone()                                                        #Column Layout -> [(uid,designation,pwd,salt_id)]
+    if check is None:
+        messagebox.showerror("Error","User Not found!!")
+        return
     '''      Evaluating with respect to the obtained data               '''
-
-    if b==check[0][1]:                                                                                                                  #Checking if the Passwords Match
-        if check[0][2].casefold()=="Admin".casefold():
+    f=open("BillingInfo.dat","rb+")
+    data=load(f)
+    salt=data[check[-1]]
+    password=hashpw(pwd.encode(),salt)
+    if str(password)==check[2]:                                                                                                                  #Checking if the Passwords Match
+        if check[1].casefold()=="Admin".casefold():
             global Admin
             Admin=True                                                                                                                   #Setting the role as Admin if it is so                                                                         
             messagebox.showinfo(title="Login Successful!",message="You are now logged in as Admin.")
@@ -150,16 +176,4 @@ def Billing() -> None:
     #Should plan
     #def Inventory():
 
-
-try:
-    con=connect(host='192.168.226.69', database = 'BMS',user = 'postgres',password = 'Nebinson@1', port = '5432')#Establishing Connection to the Server
-except:
-    messagebox.showerror("Authentication Error","Server not reachable!")
-    exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
-
-cur = con.cursor()                                                                                  
-Admin=False
-Login()
-
-if __name__=="__main__":
-    ...
+Init()
