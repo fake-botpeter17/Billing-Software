@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="font">
+   <font>
+    <kerning>false</kerning>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="Bill_Number_Label">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>110</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Bill No    :</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Bill_Date_Label">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>110</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Bill Date : </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Bill_Time_Label">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>140</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Bill Time : </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Billed_By_Label">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>140</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Billed By :</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableWidget">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>210</y>
+      <width>841</width>
+      <height>451</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <kerning>false</kerning>
+      <fontweight>Medium</fontweight>
+     </font>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <attribute name="horizontalHeaderCascadingSectionResizes">
+     <bool>false</bool>
+    </attribute>
+    <column>
+     <property name="text">
+      <string>S. No.</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Item Code</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Item Name </string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Rate (Rs.)</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Quantity </string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Discount (%)</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Discount (Rs.)</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Price (Rs.)</string>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+    </column>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>905</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="New_Bill_Tab">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+    <widget class="QMenu" name="menuStock">
+     <property name="title">
+      <string>Stock</string>
+     </property>
+     <addaction name="actionUpdate_Stck"/>
+     <addaction name="actionView_Stock"/>
+    </widget>
+    <widget class="QMenu" name="menuSales">
+     <property name="title">
+      <string>Sales</string>
+     </property>
+     <addaction name="actionToday_s_Sales"/>
+     <addaction name="actionPrevious_Sales"/>
+    </widget>
+    <addaction name="menuStock"/>
+    <addaction name="menuSales"/>
+    <addaction name="actionStaff_Info"/>
+   </widget>
+   <widget class="QMenu" name="Quit_Tab">
+    <property name="title">
+     <string>Account </string>
+    </property>
+    <addaction name="actionProfile_2"/>
+    <addaction name="actionLogout"/>
+   </widget>
+   <widget class="QMenu" name="menuAccount_Info">
+    <property name="title">
+     <string>Exit</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="New_Bill_Tab_2">
+    <property name="title">
+     <string>New Bill</string>
+    </property>
+   </widget>
+   <addaction name="New_Bill_Tab_2"/>
+   <addaction name="New_Bill_Tab"/>
+   <addaction name="Quit_Tab"/>
+   <addaction name="menuAccount_Info"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionProfile">
+   <property name="text">
+    <string>Profile</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Stck">
+   <property name="text">
+    <string>View Stock</string>
+   </property>
+  </action>
+  <action name="actionView_Stock">
+   <property name="text">
+    <string>Update Stock</string>
+   </property>
+  </action>
+  <action name="actionToday_s_Sales">
+   <property name="text">
+    <string>Today's Sales</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Sales">
+   <property name="text">
+    <string>Previous Sales</string>
+   </property>
+  </action>
+  <action name="actionStaff_Info">
+   <property name="text">
+    <string>Staff Management </string>
+   </property>
+  </action>
+  <action name="actionProfile_2">
+   <property name="text">
+    <string>Profile </string>
+   </property>
+  </action>
+  <action name="actionLogout">
+   <property name="text">
+    <string>Logout</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="Qt resources/Report_Manager/image.qrc"/>
+ </resources>
+ <connections/>
+</ui>
