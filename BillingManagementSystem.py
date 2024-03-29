@@ -39,7 +39,7 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 '''
 
 User=str()
-
+bill_data=dict()
 def Init():
     try:
         con=connect(host="{}".format(os.getenv('Database_Host')), 
@@ -201,14 +201,23 @@ class MyGUI(QMainWindow):
                     cur.execute("select name,rate from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
                     if data is not None:
-                        Item_Name, Item_Rate = data
-                        self.Bill_Table.setItem(row, Name_Col, QTableWidgetItem(Item_Name))  # Set item in table
-                        self.Bill_Table.setItem(row, Rate_Col, QTableWidgetItem(str(Item_Rate)))  # Set item in 
-                        self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
-                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
-                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
-                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
-                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Item_Rate)))
+                        if Item_ID in bill_data.keys():
+                            self.Bill_Table.setItem(row,ID_Col,QTableWidgetItem(""))
+                            row=bill_data[Item_ID]
+                            qnty=int(self.Bill_Table.item(row,Qnty_Col).text())
+                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(qnty+1)))
+                            self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                            pass
+                        else:
+                            Item_Name, Item_Rate = data
+                            self.Bill_Table.setItem(row, Name_Col, QTableWidgetItem(Item_Name))  # Set item in table
+                            self.Bill_Table.setItem(row, Rate_Col, QTableWidgetItem(str(Item_Rate)))  # Set item in 
+                            self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
+                            self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
+                            self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
+                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
+                            self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Item_Rate)))
+                            bill_data[Item_ID] = row
                 except:
                     pass
                 self.Bill_Table.cellChanged.connect(self.handle_cell_change)
@@ -277,9 +286,6 @@ class MyGUI(QMainWindow):
 
         else:
             return
-
-
-
 
 '''
 def Menu() -> None:
