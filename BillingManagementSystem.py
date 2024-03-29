@@ -1,17 +1,25 @@
 '''                 IMPORTS                       '''
 
+from sqlite3 import Row
 import subprocess
+from time import sleep
 from typing import Generator,NoReturn
 from psycopg2 import *
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
-from PyQt6.QtWidgets import *  
+from PyQt6.QtWidgets import * 
+from PyQt6.QtWidgets import QTableWidget 
+from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from bcrypt import hashpw
 from pickle import load
+from datetime import datetime,date
 import psycopg2
 import UserRegistration
 import os
+import sys
 
+#Global Declaration
+Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,7
 '''
     GUI for Login is implemented using Tkinter
     Rest are expected to be implemented using PyQt6
@@ -21,7 +29,7 @@ import os
 
 '''
     from time import sleep
-    import datetime
+    
     import pyarrow
     import pandas
     def Stock():
@@ -30,12 +38,18 @@ import os
     from math import * 
 '''
 
+User=str()
+
 def Init():
     try:
-        con=connect(host="{}".format(os.getenv('Database_Host')), database = "{}".format(os.getenv('Database_Name')),user = "{}".format(os.getenv("Database_User")),password ="{}".format(os.getenv('Database_Pwd')), port = "{}".format(os.getenv("Database_Port")))#Establishing Connection to the Server
+        con=connect(host="{}".format(os.getenv('Database_Host')), 
+                    database = "{}".format(os.getenv('Database_Name')),
+                    user = "{}".format(os.getenv("Database_User")),
+                    password ="{}".format(os.getenv('Database_Pwd')), 
+                    port = "{}".format(os.getenv("Database_Port")))                                 #Establishing Connection to the Server
     except psycopg2.Error as e:
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
-        messagebox.showinfo("Try opening the program as Administrator")
+        messagebox.showinfo("Error","Try opening the program as Administrator")
         exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
     global cur,Admin
     cur = con.cursor()                                                                                  
@@ -53,30 +67,23 @@ def Init():
     return ip_address
 '''
 
-class MyGUI(QMainWindow):
-    def __init__(self):
-        super(MyGUI,self).__init__()
-        uic.loadUi("Menu.ui", self)
-        aspect_ratio = 16/9  # Common aspect ratio for 720p
-        min_height = 720
-        min_width = int(min_height * aspect_ratio)
-        self.setMinimumSize(min_width,min_height)
-        self.show()
-
-        self.menubar.Exit_Menu.Exit_Button.triggered.connect(lambda: exit(True))         
+def Profile_(User):
+    ...
 
 
 def main():
+    global app
     app = QApplication([])
     window = MyGUI()
-    app.exec()
+    sys.exit(app.exec())
 
 
 def Bill_Number() -> Generator:
     '''
         Should Update The lower bound every time the program starts (JUST IN CASE)
+        Log Bills to DB
     '''
-    for i in range(10021,99999):
+    for i in range(10000,100000):
         yield i
 
 Bill_No :Generator = Bill_Number()                                  #Memory Efficient way to generate bill no. successively (Generator Object)
@@ -103,8 +110,10 @@ def Auth(user :str ,pwd :str) -> None :
             messagebox.showinfo(title="Login Successful!",message="You are now logged in as Admin.")
         else:
             messagebox.showinfo(title="Login Successful!",message="You are now logged in.")
+        global User
+        User=user
         login_window.destroy()                                                                                                  #Closing the Login Window after successful Login                         
-        Menu()                                                                                                                           # Opening Menu after Logging In
+        main()                                                                                                                           # Opening Menu after Logging In
             
     else:                                                                                                                  
         messagebox.showerror(title= "Authentication Error!",message = 'Wrong Username or Password')   # Displaying Error if Login Failed
@@ -144,6 +153,135 @@ def Login() -> None:
     frame.pack()
     login_window.mainloop()
 
+
+
+class MyGUI(QMainWindow):
+    def __init__(self):
+        super(MyGUI,self).__init__()
+        uic.loadUi("Menu.ui", self)
+        aspect_ratio = 16/9  # Common aspect ratio for 720p
+        min_height = 720
+        min_width = int(min_height * aspect_ratio)
+        self.setMinimumSize(min_width,min_height)
+        self.setWindowTitle("BMS -botpeter17")
+        icon=QIcon("My_Icon.jpeg")
+        self.setWindowIcon(icon)
+        if Admin:
+            self.menuSales.setEnabled(True)
+            self.menuStock.setEnabled(True)
+            self.New_Bill_Tab.setEnabled(True)                             #Should Set back to Flase at exit
+        self.show()
+        self.Bill_Number_Label.setText("Bill No    : {}".format(next(Bill_No)))
+        self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
+        self.Billed_By_Label.setText("Billed By : {}".format(User))
+        self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
+        self.actionLogout.triggered.connect(lambda: self.logout())   
+        self.Profile.triggered.connect(lambda: Profile_(User))
+        self.Bill_Table.setColumnCount(8)
+        self.Bill_Table.setRowCount(18)
+        self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+    
+    def Data_Input(self):
+        ...
+    def handle_cell_change(self, row, col):
+        """
+  This slot function is called when a cell value in the Bill_Table changes.
+
+  Args:
+      row (int): The row index of the changed cell.
+      col (int): The column index of the changed cell.
+        """
+         # Access and use the row and col values here
+        print(f"Cell at row {row}, column {col} changed!")
+        if row is not None:
+            if col==ID_Col:
+                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                Item_ID=self.Bill_Table.item(row,1).text()
+                try:
+                    cur.execute("select name,rate from items where id='{}'".format(Item_ID))
+                    data=cur.fetchone()
+                    if data is not None:
+                        Item_Name, Item_Rate = data
+                        self.Bill_Table.setItem(row, Name_Col, QTableWidgetItem(Item_Name))  # Set item in table
+                        self.Bill_Table.setItem(row, Rate_Col, QTableWidgetItem(str(Item_Rate)))  # Set item in 
+                        self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
+                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
+                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
+                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
+                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Item_Rate)))
+                except:
+                    pass
+                self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+            elif col==Qnty_Col:
+                try:
+                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    Quantity=int(self.Bill_Table.item(row,4).text())
+                    Rate=int(self.Bill_Table.item(row,3).text())
+                    Price=Quantity*Rate
+                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                except:
+                    pass
+            elif col==Disc_prcnt_Col:
+                try:
+                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    Discount_Percentage=int(self.Bill_Table.item(row,col).text())
+                    Quantity=int(self.Bill_Table.item(row,4).text())
+                    Rate=int(self.Bill_Table.item(row,3).text())
+                    Price=Quantity*Rate
+                    Discount=Price*(Discount_Percentage/100)
+                    Price_disc=Price-Discount
+                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
+                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(Discount)))
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                except:
+                    pass
+            elif col==Disc_Col:
+                try:
+                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    Discount=int(self.Bill_Table.item(row,col).text())
+                    Quantity=int(self.Bill_Table.item(row,4).text())
+                    Rate=int(self.Bill_Table.item(row,3).text())
+                    Price=Quantity*Rate
+                    Price_disc=Price-Discount
+                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
+                    Disc_perc=((Discount/Price)*100)
+                    self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(Disc_perc)))
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                except:
+                    pass
+
+                            
+    def logout(self):
+        confirmation_dialog = QMessageBox(self)
+        confirmation_dialog.setWindowTitle("Confirmation")
+        confirmation_dialog.setText("Are you sure you want to logout?")
+        confirmation_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        confirmation_dialog.setIcon(QMessageBox.Icon.Question)
+        reply=confirmation_dialog.exec()
+        if reply==QMessageBox.StandardButton.Yes:
+            Admin=False
+            self.menuSales.setEnabled(False)
+            self.menuStock.setEnabled(False)
+            self.New_Bill_Tab.setEnabled(False)
+            information_dialog = QMessageBox()
+            information_dialog.setWindowTitle("Success!")
+            information_dialog.setText("Logged out successfully!")
+            information_dialog.setIcon(QMessageBox.Icon.Information)  # Optional: Information icon
+            information_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)  # Only OK button
+            app.closeAllWindows()
+            information_dialog.exec()
+            information_dialog.close()
+            self.close()
+            exit(True)
+
+        else:
+            return
+
+
+
+
+'''
 def Menu() -> None:
 
     #GUI Init
@@ -186,7 +324,6 @@ def Billing() -> None:
     #Should plan
     #def Inventory():
 
-'''Init()'''
+    '''
 
-if __name__=="__main__":
-    main()
+Init()
