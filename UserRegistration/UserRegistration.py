@@ -2,8 +2,8 @@ from psycopg2 import *
 from bcrypt import gensalt, hashpw
 from pickle import load,dump 
 from secrets import token_urlsafe
-import os
-def  UserRegistration(Num :int,host_ :str= "{}".format(os.getenv('Database_Host')),Db :str= "{}".format(os.getenv('Database_Name')),usr :str="{}".format(os.getenv("Database_User")),pwd :str= "{}".format(os.getenv('Database_Pwd')),Port :str="{}".format(os.getenv("Database_Port"))):
+from os import getenv
+def  UserRegistration(Num :int,host_ :str= "{}".format(getenv('Database_Host')),Db :str= "{}".format(getenv('Database_Name')),usr :str="{}".format(getenv("Database_User")),pwd :str= "{}".format(getenv('Database_Pwd')),Port :str="{}".format(getenv("Database_Port"))):
     try:
         con=connect(host=host_, database=Db ,user=usr ,password=pwd, port = Port)#Establishing Connection to the Server
     except:
