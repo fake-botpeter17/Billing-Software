@@ -57,13 +57,20 @@ class MyGUI(QMainWindow):
     def __init__(self):
         super(MyGUI,self).__init__()
         uic.loadUi("Menu.ui", self)
-        self.show()                   
+        aspect_ratio = 16/9  # Common aspect ratio for 720p
+        min_height = 720
+        min_width = int(min_height * aspect_ratio)
+        self.setMinimumSize(min_width,min_height)
+        self.show()
+
+        self.menubar.Exit_Menu.Exit_Button.triggered.connect(lambda: exit(True))         
 
 
 def main():
     app = QApplication([])
     window = MyGUI()
     app.exec()
+
 
 def Bill_Number() -> Generator:
     '''
@@ -179,4 +186,7 @@ def Billing() -> None:
     #Should plan
     #def Inventory():
 
-Init()
+'''Init()'''
+
+if __name__=="__main__":
+    main()

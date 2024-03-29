@@ -2,6 +2,26 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1280</width>
+    <height>720</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>1920</width>
+    <height>1080</height>
+   </size>
+  </property>
   <property name="font">
    <font>
     <kerning>false</kerning>
@@ -11,132 +31,87 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="Bill_Number_Label">
+   <widget class="QTableWidget" name="Bill_Table">
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>110</y>
-      <width>151</width>
-      <height>21</height>
+      <y>150</y>
+      <width>900</width>
+      <height>500</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <family>Times New Roman</family>
-      <pointsize>14</pointsize>
-      <kerning>false</kerning>
-     </font>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
     </property>
-    <property name="text">
-     <string>Bill No    :</string>
+    <property name="maximumSize">
+     <size>
+      <width>900</width>
+      <height>500</height>
+     </size>
     </property>
-   </widget>
-   <widget class="QLabel" name="Bill_Date_Label">
-    <property name="geometry">
-     <rect>
-      <x>670</x>
-      <y>110</y>
-      <width>151</width>
-      <height>21</height>
-     </rect>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
     </property>
-    <property name="font">
-     <font>
-      <family>Times New Roman</family>
-      <pointsize>14</pointsize>
-      <kerning>false</kerning>
-     </font>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
     </property>
-    <property name="text">
-     <string>Bill Date : </string>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::AdjustToContents</enum>
     </property>
-   </widget>
-   <widget class="QLabel" name="Bill_Time_Label">
-    <property name="geometry">
-     <rect>
-      <x>670</x>
-      <y>140</y>
-      <width>151</width>
-      <height>21</height>
-     </rect>
+    <property name="showGrid">
+     <bool>true</bool>
     </property>
-    <property name="font">
-     <font>
-      <family>Times New Roman</family>
-      <pointsize>14</pointsize>
-      <kerning>false</kerning>
-     </font>
+    <property name="gridStyle">
+     <enum>Qt::NoPen</enum>
     </property>
-    <property name="text">
-     <string>Bill Time : </string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Billed_By_Label">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>140</y>
-      <width>151</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Times New Roman</family>
-      <pointsize>14</pointsize>
-      <kerning>false</kerning>
-     </font>
-    </property>
-    <property name="text">
-     <string>Billed By :</string>
-    </property>
-   </widget>
-   <widget class="QTableWidget" name="tableWidget">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>210</y>
-      <width>841</width>
-      <height>451</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <kerning>false</kerning>
-      <fontweight>Medium</fontweight>
-     </font>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::NoFocus</enum>
-    </property>
+    <attribute name="horizontalHeaderVisible">
+     <bool>true</bool>
+    </attribute>
     <attribute name="horizontalHeaderCascadingSectionResizes">
-     <bool>false</bool>
+     <bool>true</bool>
+    </attribute>
+    <attribute name="horizontalHeaderDefaultSectionSize">
+     <number>110</number>
+    </attribute>
+    <attribute name="verticalHeaderCascadingSectionResizes">
+     <bool>true</bool>
     </attribute>
     <column>
      <property name="text">
-      <string>S. No.</string>
+      <string>S.No.</string>
      </property>
      <property name="font">
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <stylestrategy>PreferAntialias</stylestrategy>
+       <kerning>false</kerning>
       </font>
+     </property>
+     <property name="foreground">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>Item Code</string>
+      <string>Item ID</string>
      </property>
      <property name="font">
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>true</kerning>
       </font>
      </property>
     </column>
@@ -148,39 +123,47 @@
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>Rate (Rs.)</string>
+      <string>Rate</string>
      </property>
      <property name="font">
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>Quantity </string>
+      <string>Quantity</string>
      </property>
      <property name="font">
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>Discount (%)</string>
+      <string>New Column</string>
      </property>
      <property name="font">
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
@@ -192,6 +175,8 @@
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
@@ -203,9 +188,169 @@
       <font>
        <family>Times New Roman</family>
        <pointsize>12</pointsize>
+       <bold>true</bold>
+       <kerning>false</kerning>
       </font>
      </property>
     </column>
+   </widget>
+   <widget class="QLabel" name="Net_Discount_Label">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>570</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>12</pointsize>
+      <bold>true</bold>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Net Discount </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Net_Total_Label">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>540</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>12</pointsize>
+      <bold>true</bold>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Net Total</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Total_Label">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>600</y>
+      <width>49</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>12</pointsize>
+      <bold>true</bold>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="text">
+     <string>Total </string>
+    </property>
+   </widget>
+   <widget class="QSplitter" name="splitter">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>50</y>
+      <width>996</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+    <widget class="QLabel" name="Bill_Number_Label">
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>14</pointsize>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="whatsThis">
+      <string extracomment="Bill Identification Number"/>
+     </property>
+     <property name="text">
+      <string>Bill No    :     </string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Bill_Date_Label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>14</pointsize>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="whatsThis">
+      <string extracomment="Date of the Bill"/>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string>Bill Date : </string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QSplitter" name="splitter_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>90</y>
+      <width>996</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+    <widget class="QLabel" name="Billed_By_Label">
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>14</pointsize>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="whatsThis">
+      <string extracomment="Staff who is billing"/>
+     </property>
+     <property name="text">
+      <string>Billed By :                          </string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Bill_Time_Label">
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>14</pointsize>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="whatsThis">
+      <string extracomment="Time of the Bill"/>
+     </property>
+     <property name="text">
+      <string>Bill Time : </string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -213,7 +358,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>905</width>
+     <width>1280</width>
      <height>22</height>
     </rect>
    </property>
@@ -222,6 +367,9 @@
      <string>Menu</string>
     </property>
     <widget class="QMenu" name="menuStock">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Stock</string>
      </property>
@@ -229,6 +377,9 @@
      <addaction name="actionView_Stock"/>
     </widget>
     <widget class="QMenu" name="menuSales">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Sales</string>
      </property>
@@ -250,6 +401,7 @@
     <property name="title">
      <string>Exit</string>
     </property>
+    <addaction name="Exit_Button"/>
    </widget>
    <widget class="QMenu" name="New_Bill_Tab_2">
     <property name="title">
@@ -288,6 +440,9 @@
    </property>
   </action>
   <action name="actionStaff_Info">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Staff Management </string>
    </property>
@@ -300,6 +455,11 @@
   <action name="actionLogout">
    <property name="text">
     <string>Logout</string>
+   </property>
+  </action>
+  <action name="Exit_Button">
+   <property name="text">
+    <string>Logout and Exit</string>
    </property>
   </action>
  </widget>
