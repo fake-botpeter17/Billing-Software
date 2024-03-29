@@ -8,6 +8,8 @@ from PyQt6.QtWidgets import *
 from PyQt6 import uic
 from bcrypt import hashpw
 from pickle import load
+from urllib import request
+from time import sleep
 import psycopg2
 import UserRegistration
 import os
@@ -20,7 +22,6 @@ import os
 #  Imports that aren't required (FOR NOW)
 
 '''
-    from time import sleep
     import datetime
     import pyarrow
     import pandas
@@ -30,7 +31,17 @@ import os
     from math import * 
 '''
 
+def check_Internet():
+    try:
+        request.urlopen('https://www.google.com')
+        return True
+    except:
+        return False
+    
 def Init():
+    while not(check_Internet()):
+        messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
+        sleep(5)
     try:
         con=connect(host="{}".format(os.getenv('Database_Host')), database = "{}".format(os.getenv('Database_Name')),user = "{}".format(os.getenv("Database_User")),password ="{}".format(os.getenv('Database_Pwd')), port = "{}".format(os.getenv("Database_Port")))#Establishing Connection to the Server
     except psycopg2.Error as e:
