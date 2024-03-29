@@ -13,6 +13,7 @@ from time import sleep
 import psycopg2
 import UserRegistration
 import os
+import atexit
 
 '''
     GUI for Login is implemented using Tkinter
@@ -31,6 +32,13 @@ import os
     from math import * 
 '''
 
+@atexit.register
+def closure():
+    if not(cur.closed):
+        con.close()
+    global Admin
+    Admin=False
+    messagebox.showinfo("Exited","Program Exited Successfully!")
 def check_Internet():
     try:
         request.urlopen('https://www.google.com')
@@ -43,12 +51,12 @@ def Init():
         messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
         sleep(5)
     try:
+        global con,cur,Admin
         con=connect(host="{}".format(os.getenv('Database_Host')), database = "{}".format(os.getenv('Database_Name')),user = "{}".format(os.getenv("Database_User")),password ="{}".format(os.getenv('Database_Pwd')), port = "{}".format(os.getenv("Database_Port")))#Establishing Connection to the Server
     except psycopg2.Error as e:
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
         messagebox.showinfo("Try opening the program as Administrator")
-        exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
-    global cur,Admin
+        exit(True)
     cur = con.cursor()                                                                                  
     Admin=False
     Login()
@@ -98,6 +106,7 @@ def Auth(user :str ,pwd :str) -> None :
     '''      Evaluating with respect to the obtained data               '''
     f=open("BillingInfo.dat","rb+")
     data=load(f)
+    f.close()
     salt=data[check[-1]]
     password=hashpw(pwd.encode(),salt)
     if str(password)==check[2]:                                                                                                                  #Checking if the Passwords Match
