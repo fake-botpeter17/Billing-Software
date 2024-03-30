@@ -196,7 +196,10 @@ class MyGUI(QMainWindow):
         if row is not None:
             if col==ID_Col:
                 self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
-                Item_ID=self.Bill_Table.item(row,1).text()
+                try:
+                    Item_ID=int(self.Bill_Table.item(row,1).text())
+                except:
+                    pass
                 try:
                     cur.execute("select name,rate from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
@@ -206,7 +209,13 @@ class MyGUI(QMainWindow):
                             row=bill_data[Item_ID]
                             qnty=int(self.Bill_Table.item(row,Qnty_Col).text())
                             self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(qnty+1)))
-                            self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                            try:
+                                Quantity=int(self.Bill_Table.item(row,4).text())
+                                Rate=int(self.Bill_Table.item(row,3).text())
+                                Price=Quantity*Rate
+                                self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))                                
+                            except:
+                                pass
                             pass
                         else:
                             Item_Name, Item_Rate = data
@@ -228,6 +237,9 @@ class MyGUI(QMainWindow):
                     Rate=int(self.Bill_Table.item(row,3).text())
                     Price=Quantity*Rate
                     self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))
+                    Discount=float(self.Bill_Table.item(row,Disc_prcnt_Col).text())
+                    Disc_Price=Price*Discount/100
+                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Disc_Price,2))))
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
@@ -255,10 +267,23 @@ class MyGUI(QMainWindow):
                     Price_disc=Price-Discount
                     self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
                     Disc_perc=((Discount/Price)*100)
-                    self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(Disc_perc)))
+                    self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(round(Disc_perc,2))))
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
+
+            net_total=int()
+            total=float()
+            discount=float()
+            for key in bill_data.keys():
+                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
+                discount+=float(self.Bill_Table.item(bill_data[key],Disc_Col).text())
+                self.Net_Discount_Label.setText("Net Discount    : "+str(round(discount,2)))
+                net_total+=(total+discount)
+                self.Total_Label.setText("Total                  : "+str(round(total,2)))
+                self.Net_Total_Label.setText("Net Total          : "+str(net_total))
+                self.Bill_Table.cellChanged.connect(self.handle_cell_change)
 
                             
     def logout(self):
