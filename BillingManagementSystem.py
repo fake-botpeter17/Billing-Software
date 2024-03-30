@@ -5,6 +5,7 @@ import subprocess
 from time import sleep
 from typing import Generator,NoReturn
 from psycopg2 import *
+import psycopg2
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
 from PyQt6.QtWidgets import * 
 from PyQt6.QtWidgets import QTableWidget 
@@ -220,10 +221,30 @@ class MyGUI(QMainWindow):
                 try:
                     Item_ID=int(self.Bill_Table.item(row,1).text())
                 except:
-                    pass
+                    if self.Bill_Table.item(row,1).text()=="" or self.Bill_Table.item(row,1).text()==None:
+                        self.Bill_Table.setItem(row,0,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Name_Col,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Rate_Col,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str('')))
+                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str("")))
                 try:
                     cur.execute("select name,rate from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
+                    if row in bill_data.values():
+                        self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
+                        self.Bill_Table.setItem(row,Name_Col,QTableWidgetItem(''))
+                        self.Bill_Table.setItem(row,Rate_Col,QTableWidgetItem(""))
+                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
+                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
+                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
+                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(0)))
+                        for key in bill_data.keys():
+                            if bill_data[key]==row:
+                                break
+                        bill_data.pop(key,None)
+                            
                     if data is not None:
                         if Item_ID in bill_data.keys():
                             self.Bill_Table.setItem(row,ID_Col,QTableWidgetItem(""))
@@ -345,12 +366,19 @@ class MyGUI(QMainWindow):
             try:
                 for key in bill_data.keys():
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
-                    total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
-                    discount+=float(self.Bill_Table.item(bill_data[key],Disc_Col).text())
+                    try:
+                        total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
+                    except:
+                        pass
+                    try:
+                        discount+=float(self.Bill_Table.item(bill_data[key],Disc_Col).text())
+                    except:
+                        pass
                     self.Net_Discount_Label.setText("Net Discount    : "+str(round(discount,2)))
-                    net_total+=(total+discount)
+                    net_total=(total+discount)
                     self.Total_Label.setText("Total                  : "+str(round(total,2)))
                     self.Net_Total_Label.setText("Net Total          : "+str(net_total))
+                    self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
             except:
                 try:
