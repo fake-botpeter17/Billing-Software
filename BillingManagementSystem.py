@@ -61,6 +61,7 @@ def Init():
         messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
         sleep(5)
     try:
+        global con
         con=connect(host="{}".format(os.getenv('Database_Host')), 
                     database = "{}".format(os.getenv('Database_Name')),
                     user = "{}".format(os.getenv("Database_User")),
@@ -70,7 +71,7 @@ def Init():
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
         messagebox.showinfo("Error","Try opening the program as Administrator")
         exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
-    global con,cur,Admin
+    global cur,Admin
     cur = con.cursor()                                                                                  
     Admin=False
     Login()
