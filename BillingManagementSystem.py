@@ -13,13 +13,15 @@ from PyQt6 import uic
 from bcrypt import hashpw
 from pickle import load
 from datetime import datetime,date
-import psycopg2
 import UserRegistration
 import os
 import sys
+from urllib import request
+import atexit
 
 #Global Declaration
 Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,7
+
 '''
     GUI for Login is implemented using Tkinter
     Rest are expected to be implemented using PyQt6
@@ -28,8 +30,6 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 #  Imports that aren't required (FOR NOW)
 
 '''
-    from time import sleep
-    
     import pyarrow
     import pandas
     def Stock():
@@ -40,7 +40,26 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 
 User=str()
 bill_data=dict()
+
+@atexit.register
+def closure():
+    if not(cur.closed):
+        con.close()
+    global Admin
+    Admin=False
+    messagebox.showinfo("Exited","Program Exited Successfully!")
+    
+def check_Internet():
+    try:
+        request.urlopen('https://www.google.com')
+        return True
+    except:
+        return False
+    
 def Init():
+    while not(check_Internet()):
+        messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
+        sleep(5)
     try:
         con=connect(host="{}".format(os.getenv('Database_Host')), 
                     database = "{}".format(os.getenv('Database_Name')),
@@ -51,7 +70,7 @@ def Init():
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
         messagebox.showinfo("Error","Try opening the program as Administrator")
         exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
-    global cur,Admin
+    global con,cur,Admin
     cur = con.cursor()                                                                                  
     Admin=False
     Login()
@@ -101,6 +120,7 @@ def Auth(user :str ,pwd :str) -> None :
     '''      Evaluating with respect to the obtained data               '''
     f=open("BillingInfo.dat","rb+")
     data=load(f)
+    f.close()
     salt=data[check[-1]]
     password=hashpw(pwd.encode(),salt)
     if str(password)==check[2]:                                                                                                                  #Checking if the Passwords Match

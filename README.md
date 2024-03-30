@@ -1,4 +1,2 @@
-This branch is to secure the authentication used in the program by hashing the passwords
-bcrypt module is used for hashing and salting the passwords
-Env Variables for securing DB Authenticators
-Created Custom Module (UserRegistration) for Adding new users
+The main branch of BMS
+This branch shall not be edited but only be merged with other branches
