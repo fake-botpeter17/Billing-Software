@@ -227,19 +227,48 @@ class MyGUI(QMainWindow):
                             self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
                             self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Item_Rate)))
                             bill_data[Item_ID] = row
+                    else:
+                        if Item_ID in bill_data.keys():
+                            self.Bill_Table.setItem(row,ID_Col,QTableWidgetItem(""))
+                            row=bill_data[Item_ID]
+                            qnty=int(self.Bill_Table.item(row,Qnty_Col).text())
+                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(qnty+1)))
+                            try:
+                                Quantity=int(self.Bill_Table.item(row,4).text())
+                                Rate=int(self.Bill_Table.item(row,3).text())
+                                Price=Quantity*Rate
+                                self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))                                
+                            except:
+                                pass
+                            pass
+                        else:
+                            self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
+                            self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
+                            self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
+                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
+                            bill_data[Item_ID] = row
                 except:
                     pass
                 self.Bill_Table.cellChanged.connect(self.handle_cell_change)
             elif col==Qnty_Col:
                 try:
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
-                    Quantity=int(self.Bill_Table.item(row,4).text())
-                    Rate=int(self.Bill_Table.item(row,3).text())
+                    Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
+                    Rate=int(self.Bill_Table.item(row,Rate_Col).text())
                     Price=Quantity*Rate
-                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))
-                    Discount=float(self.Bill_Table.item(row,Disc_prcnt_Col).text())
-                    Disc_Price=Price*Discount/100
-                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Disc_Price,2))))
+                    #
+                    try:
+                        Discount_prct=float(self.Bill_Table.item(row,Disc_prcnt_Col).text())
+                        Discount=Price*(Discount_prct/100)
+                        Net_Price=Price-Discount
+                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Net_Price)))
+                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Discount,2))))
+                    except:
+                        Discount=int(self.Bill_Table.item(row,Disc_Col).text())
+                        Net_Price=Price-Discount
+                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Net_Price)))
+                        Discount_prct=Discount*100/Net_Price
+                        self.Bill_Table.setItem(row,Discount_Col,QTableWidgetItem(str(round(Discount_prct,2))))
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
@@ -253,7 +282,7 @@ class MyGUI(QMainWindow):
                     Discount=Price*(Discount_Percentage/100)
                     Price_disc=Price-Discount
                     self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
-                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(Discount)))
+                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Discount,2))))
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
@@ -271,19 +300,43 @@ class MyGUI(QMainWindow):
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
+            elif col==Rate_Col:
+                try:
+                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    Rate=int(self.Bill_Table.item(row,col).text())
+                    Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
+                    Price=Quantity*Rate
+                    Discount=int(self.Bill_Table.item(row,Disc_prcnt_Col).text())
+                    Disc_Price=Price*Discount/100
+                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Disc_Price,2))))
+                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(round((Price - Disc_Price),2))))
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                except:
+                    try:
+                        self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                        pass
+                    except:
+                        pass
 
             net_total=int()
             total=float()
             discount=float()
-            for key in bill_data.keys():
-                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
-                total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
-                discount+=float(self.Bill_Table.item(bill_data[key],Disc_Col).text())
-                self.Net_Discount_Label.setText("Net Discount    : "+str(round(discount,2)))
-                net_total+=(total+discount)
-                self.Total_Label.setText("Total                  : "+str(round(total,2)))
-                self.Net_Total_Label.setText("Net Total          : "+str(net_total))
-                self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+            try:
+                for key in bill_data.keys():
+                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
+                    discount+=float(self.Bill_Table.item(bill_data[key],Disc_Col).text())
+                    self.Net_Discount_Label.setText("Net Discount    : "+str(round(discount,2)))
+                    net_total+=(total+discount)
+                    self.Total_Label.setText("Total                  : "+str(round(total,2)))
+                    self.Net_Total_Label.setText("Net Total          : "+str(net_total))
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+            except:
+                try:
+                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    pass
+                except:
+                    pass
 
                             
     def logout(self):
