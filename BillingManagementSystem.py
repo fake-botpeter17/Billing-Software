@@ -1,11 +1,8 @@
 '''                 IMPORTS                       '''
 
-from sqlite3 import Row
-import subprocess
 from time import sleep
 from typing import Generator,NoReturn
 from psycopg2 import *
-import psycopg2
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
 from PyQt6.QtWidgets import * 
 from PyQt6.QtWidgets import QTableWidget 
@@ -14,13 +11,15 @@ from PyQt6 import uic
 from bcrypt import hashpw
 from pickle import load
 from datetime import datetime,date
+from urllib import request
+import psycopg2
+import subprocess
 import UserRegistration
 import os
 import sys
-from urllib import request
 import atexit
 
-#Global Declaration
+#Global Declaration of Column Position
 Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,7
 
 '''
@@ -33,9 +32,6 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 '''
     import pyarrow
     import pandas
-    def Stock():
-    def Stock_Update():
-    def Search():
     from math import * 
 '''
 
@@ -61,9 +57,14 @@ def check_Internet():
         return False
     
 def Init():
-    '''while not(check_Internet()):
+    '''
+    Should Change the Logic for checking the Network Connectivity
+
+    Should add a loading Window
+    '''
+    while not(check_Internet()):
         messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
-        sleep(5)'''
+        sleep(5)
     try:
         global con
         con=connect(host="{}".format(os.getenv('Database_Host')), 
@@ -71,10 +72,13 @@ def Init():
                     user = "{}".format(os.getenv("Database_User")),
                     password ="{}".format(os.getenv('Database_Pwd')), 
                     port = "{}".format(os.getenv("Database_Port")))                                 #Establishing Connection to the Server
-    except psycopg2.Error as e:
+        '''except psycopg2.Error as e:
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
         messagebox.showinfo("Error","Try opening the program as Administrator")
-        exit(True)                                                                                                  #Exiting the Prgram when Connection to server failed 
+        exit(True)'''                                                                                                  #Exiting the Prgram when Connection to server failed 
+    except:
+        messagebox.showerror("Connection Error", "Error connecting to the Server.\nTry opening the program as Administrator")
+        exit(True)
     global cur,Admin
     cur = con.cursor()                                                                                  
     Admin=False
@@ -90,10 +94,6 @@ def Init():
         raise Exception("Failed to find IPv4 address")
     return ip_address
 '''
-
-def Profile_(User):
-    ...
-
 
 def main():
     global app
@@ -124,14 +124,15 @@ Bill_No :Generator = Bill_Number()                                  #Memory Effi
 def Auth(user :str ,pwd :str) -> None :
 
     '''           Getting Authentication Data from Server                '''
-    #############  Should Add a way to save current user #####################
-    #############               For displaying in GUI                ############################
-    cur.execute("select * from users where uid='{}'".format(user))                                            #Not sure about field Name (PWD & User)
+
+    cur.execute("select * from users where uid='{}'".format(user))                                            
     check :tuple|None=cur.fetchone()                                                        #Column Layout -> [(uid,designation,pwd,salt_id)]
     if check is None:
         messagebox.showerror("Error","User Not found!!")
         return
+    
     '''      Evaluating with respect to the obtained data               '''
+
     f=open("BillingInfo.dat","rb+")
     data=load(f)
     f.close()
@@ -189,7 +190,6 @@ def Login() -> None:
     login_window.mainloop()
 
 
-
 class BMS_Home_GUI(QMainWindow):
     def __init__(self):
         super(BMS_Home_GUI,self).__init__()
@@ -211,23 +211,12 @@ class BMS_Home_GUI(QMainWindow):
         self.Billed_By_Label.setText("Billed By : {}".format(User))
         self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
         self.actionLogout.triggered.connect(lambda: self.logout())   
-        self.Profile.triggered.connect(lambda: Profile_(User))
+        self.Profile.triggered.connect(lambda: Profile_(User))        # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)
         self.Bill_Table.setRowCount(18)
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
     
-    def Data_Input(self):
-        ...
     def handle_cell_change(self, row, col):
-        """
-  This slot function is called when a cell value in the Bill_Table changes.
-
-  Args:
-      row (int): The row index of the changed cell.
-      col (int): The column index of the changed cell.
-        """
-         # Access and use the row and col values here
-        print(f"Cell at row {row}, column {col} changed!")
         if row is not None:
             if col==ID_Col:
                 self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
@@ -311,7 +300,6 @@ class BMS_Home_GUI(QMainWindow):
                     Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
                     Rate=int(self.Bill_Table.item(row,Rate_Col).text())
                     Price=Quantity*Rate
-                    #
                     try:
                         Discount_prct=float(self.Bill_Table.item(row,Disc_prcnt_Col).text())
                         Discount=Price*(Discount_prct/100)
@@ -429,52 +417,13 @@ class BMS_Home_GUI(QMainWindow):
 class Profile_GUI(QMainWindow):
     def __init__(self):
         super().__init__()
+        '''
+        Should create a new .ui File
+
+        Also, should add  User Registration(Adding new User(with every detail) function to the Module
+        '''
         ...
 
-'''
-def Menu() -> None:
-
-    #GUI Init
-
-    global menu_window
-    menu_window=Tk()
-    menu_window.title("Menu")
-    menu_window.geometry('700x800')
-    menu_window.configure(bg='#FDFEFE')
-
-    #Widgets
-
-    menu_label=Label(menu_window,text="Menu",font=("Helvetica",30),bg='#333333',fg='#FF3399')
-    Billing_button=Button(menu_window,text="Billing System",command=lambda : Billing(),bg="#6A5ACD",activebackground="#4B40BD",fg='white')
-    Inventory_button=Button(menu_window,text="Inventory",command=lambda :Inv(), bg="#6A5ACD",activebackground="#4B40BD",fg='white')
-    StockMng_button=Button(menu_window,text="Stock Management",command=lambda :StockManagement(),bg="#6A5ACD",activebackground="#4B40BD",fg='white')
-    SalesInfo_Button=Button(menu_window,text="Sales Information",command=lambda : Sales(), bg="#6A5ACD",activebackground="#4B40BD",fg='white')
-    StaffInfo_Button=Button(menu_window,text="Staff Information",command=lambda :StaffInfo(), bg="#6A5ACD",activebackground="#4B40BD",fg='white')
-    Logout_Button=Button(menu_window,text="Log Out",command=lambda : [LogOut(),menu_window.destroy()],font=("Helvetica",15))
-
-    #Displaying
-        
-    menu_label.grid(row=0,column=0,columnspan=2,sticky='news',pady=40)
-    Billing_button.grid(row=1,column=0,padx=65)
-    Inventory_button.grid(row=1,column=1,padx=65)
-    StockMng_button.grid(row=2,column=0,padx=65)
-    SalesInfo_Button.grid(row=2,column=1,padx=65)
-    StaffInfo_Button.grid(row=3,column=0,columnspan=2,pady=20)
-    Logout_Button.grid(row=4,column=0,columnspan=2,pady=10)
-    menu_window.mainloop()
-
-def Billing() -> None:
-    cust_name=input("Customer Name:")
-    billno=next(Bill_No)
-    print(f"\nYour Bill Number is {billno}")
-    itemcode=input("Item Code:")
-    qty=int(input("Quantity:")) 
-    rate=float(input("Price per Item:"))
-    price=qty*rate
-    #Should plan
-    #def Inventory():
-
-    '''
 '''if __name__=='__main__':
     Login()'''
 Init()
