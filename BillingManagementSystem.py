@@ -44,8 +44,11 @@ bill_data=dict()
 
 @atexit.register
 def closure():
-    if not(cur.closed):
-        con.close()
+    try:
+        if not(cur.closed):
+            con.close()
+    except:
+        pass
     global Admin
     Admin=False
     messagebox.showinfo("Exited","Program Exited Successfully!")
@@ -58,9 +61,9 @@ def check_Internet():
         return False
     
 def Init():
-    while not(check_Internet()):
+    '''while not(check_Internet()):
         messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
-        sleep(5)
+        sleep(5)'''
     try:
         global con
         con=connect(host="{}".format(os.getenv('Database_Host')), 
@@ -95,13 +98,22 @@ def Profile_(User):
 def main():
     global app
     app = QApplication([])
-    window = MyGUI()
+    window = BMS_Home_GUI()
     sys.exit(app.exec())
 
 
 def Bill_Number() -> Generator:
     '''
-        Should Update The lower bound every time the program starts (JUST IN CASE)
+        Should Update The lower bound every time the program starts (JUST IN CASE)   => SELECT * FROM your_table ORDER BY your_primary_key_column DESC LIMIT 1;  
+        Query to fetch the last element    ====> 
+        ### Should Try getting one arguement as latest bill number and start from it(Lowerbound to that parameter)
+
+        ---------------------------
+        def Bill_Number(Latest_Bill_No :int) -> Generator:
+            for Bill_Number in range(Latest_Bill_No+1,100000):
+                yield Bill_Number
+        ---------------------------
+
         Log Bills to DB
     '''
     for i in range(10000,100000):
@@ -151,6 +163,7 @@ def Login() -> None:
     login_window.title("Login")
     login_window.geometry('550x600')
     login_window.configure(bg='#333333')
+    #login_window.overrideredirect(True)     #Removing Close button
 
     '''                     Widgets            '''
         
@@ -177,10 +190,10 @@ def Login() -> None:
 
 
 
-class MyGUI(QMainWindow):
+class BMS_Home_GUI(QMainWindow):
     def __init__(self):
-        super(MyGUI,self).__init__()
-        uic.loadUi("Menu.ui", self)
+        super(BMS_Home_GUI,self).__init__()
+        uic.loadUi("BMS_Home_GUI.ui", self)
         aspect_ratio = 16/9  # Common aspect ratio for 720p
         min_height = 720
         min_width = int(min_height * aspect_ratio)
@@ -413,6 +426,10 @@ class MyGUI(QMainWindow):
 
         else:
             return
+class Profile_GUI(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        ...
 
 '''
 def Menu() -> None:
@@ -458,5 +475,6 @@ def Billing() -> None:
     #def Inventory():
 
     '''
-
+'''if __name__=='__main__':
+    Login()'''
 Init()
