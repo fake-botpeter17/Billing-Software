@@ -47,7 +47,6 @@ def closure():
         pass
     global Admin
     Admin=False
-    messagebox.showinfo("Exited","Program Exited Successfully!")
     
 def check_Internet():
     try:
@@ -62,9 +61,9 @@ def Init():
 
     Should add a loading Window
     '''
-    while not(check_Internet()):
+    '''while not(check_Internet()):
         messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
-        sleep(5)
+        sleep(5)'''
     try:
         global con
         con=connect(host="{}".format(os.getenv('Database_Host')), 
@@ -425,5 +424,8 @@ class Profile_GUI(QMainWindow):
         ...
 
 '''if __name__=='__main__':
-    Login()'''
+    global Admin
+    Admin=True
+    main()'''
+
 Init()

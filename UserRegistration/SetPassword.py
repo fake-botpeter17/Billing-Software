@@ -3,7 +3,7 @@ from bcrypt import gensalt, hashpw
 from pickle import load,dump 
 from secrets import token_urlsafe
 from os import getenv
-def  UserRegistration(Num :int,host_ :str= "{}".format(getenv('Database_Host')),Db :str= "{}".format(getenv('Database_Name')),usr :str="{}".format(getenv("Database_User")),pwd :str= "{}".format(getenv('Database_Pwd')),Port :str="{}".format(getenv("Database_Port"))):
+def  SetPassword(Num :int,host_ :str= "{}".format(getenv('Database_Host')),Db :str= "{}".format(getenv('Database_Name')),usr :str="{}".format(getenv("Database_User")),pwd :str= "{}".format(getenv('Database_Pwd')),Port :str="{}".format(getenv("Database_Port"))):
     try:
         con=connect(host=host_, database=Db ,user=usr ,password=pwd, port = Port)#Establishing Connection to the Server
     except:
