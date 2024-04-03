@@ -191,6 +191,9 @@ def Login() -> None:
 
 class BMS_Home_GUI(QMainWindow):
     def __init__(self):
+        '''
+        Should Set the Column width from code appropriately 
+        '''
         super(BMS_Home_GUI,self).__init__()
         uic.loadUi("BMS_Home_GUI.ui", self)
         aspect_ratio = 16/9  # Common aspect ratio for 720p
