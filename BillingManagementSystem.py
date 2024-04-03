@@ -76,7 +76,7 @@ def Init():
         messagebox.showinfo("Error","Try opening the program as Administrator")
         exit(True)'''                                                                                                  #Exiting the Prgram when Connection to server failed 
     except:
-        messagebox.showerror("Connection Error", "Error connecting to the Server.\nTry opening the program as Administrator")
+        messagebox.showerror("Connection Error", "Error connecting to the Server!!\n\nTry opening the program as Administrator")
         exit(True)
     global cur,Admin
     cur = con.cursor()                                                                                  
