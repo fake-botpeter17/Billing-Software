@@ -1,2 +1,2 @@
-The main branch of BMS
-This branch shall not be edited but only be merged with other branches
+This Branch is used to update Print functionality in Billing 
+Logging Bill to Database
