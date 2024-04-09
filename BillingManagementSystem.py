@@ -1,7 +1,7 @@
 '''                 IMPORTS                       '''
 
 from time import sleep
-from typing import Generator,NoReturn
+from typing import Generator, Never,NoReturn
 from psycopg2 import *
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
 from PyQt6.QtWidgets import * 
@@ -47,8 +47,8 @@ def closure():
         pass
     global Admin
     Admin=False
-    
-def check_Internet():
+
+def check_Internet() -> bool:
     try:
         request.urlopen('https://www.google.com')
         return True
@@ -124,7 +124,26 @@ def Auth(user :str ,pwd :str) -> None :
 
     '''           Getting Authentication Data from Server                '''
 
-    cur.execute("select * from users where uid='{}'".format(user))                                            
+    cur.execute("select * from users where uid='{}'".format(user))          
+    '''
+import pickle
+def Init():
+    f=open("Bott.dat","wb")
+    query={1:"select {} from {} where {}={}"}
+    pickle.dump(query,f)
+    f.close()
+def Query_User():
+    f=open("Bott.dat","rb")    -> Bott.dat => Dict of queries
+    queries=pickle.load(f)
+    print(queries[1].format("*","Student Details","Last Name","N"))
+
+    
+
+OUTPUT:
+
+    select * from Student Details where Last Name=N
+
+    '''                                  
     check :tuple|None=cur.fetchone()                                                        #Column Layout -> [(uid,designation,pwd,salt_id)]
     if check is None:
         messagebox.showerror("Error","User Not found!!")
@@ -217,6 +236,7 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setColumnCount(8)
         self.Bill_Table.setRowCount(18)
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+        self.Print_Button.clicked.connect(self.log_bill)           #######################
     
     def handle_cell_change(self, row, col):
         if row is not None:
@@ -234,7 +254,7 @@ class BMS_Home_GUI(QMainWindow):
                         self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str('')))
                         self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str("")))
                 try:
-                    cur.execute("select name,rate from items where id='{}'".format(Item_ID))
+                    cur.execute("select name,selling_price from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
                     if row in bill_data.values():
                         self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
@@ -390,7 +410,12 @@ class BMS_Home_GUI(QMainWindow):
                 except:
                     pass
 
-                            
+
+    def log_bill(self):
+        with open("Bills//{}".format(next(Bill_No)),'w') as Bill:
+            Bill.writelines("")
+###################################################
+            ...
     def logout(self):
         confirmation_dialog = QMessageBox(self)
         confirmation_dialog.setWindowTitle("Confirmation")
