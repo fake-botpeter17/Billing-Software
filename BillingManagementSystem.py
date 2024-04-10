@@ -412,12 +412,17 @@ class BMS_Home_GUI(QMainWindow):
 
 
     def log_bill(self):
-        if total==0:
+        try:
+            if total==0:
+                return
+        except:
             return
         global Bill_No,cur
         with open("Bills//{}".format((Bill_No)),'w') as Bill:
             Bill.writelines("")
-###################################################
+            '''
+            Should add bill(text) content after determining the Paper size
+            '''
         ...
         cur.execute("insert into bills values ({},'{}',{},'{}')".format(Bill_No,(date.today().strftime("%d %B, %Y")),total,User))
         con.commit()
