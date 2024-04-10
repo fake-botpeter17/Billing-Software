@@ -37,24 +37,6 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 
 User=str()
 bill_data=dict()
-
-@atexit.register
-def closure():
-    try:
-        if not(cur.closed):
-            con.close()
-    except:
-        pass
-    global Admin
-    Admin=False
-
-def check_Internet() -> bool:
-    try:
-        request.urlopen('https://www.google.com')
-        return True
-    except:
-        return False
-    
 def Init():
     '''
     Should Change the Logic for checking the Network Connectivity
@@ -83,6 +65,24 @@ def Init():
     Admin=False
     Login()
 
+@atexit.register
+def closure():
+    try:
+        if not(cur.closed):
+            con.close()
+    except:
+        pass
+    global Admin
+    Admin=False
+
+def check_Internet() -> bool:
+    try:
+        request.urlopen('https://www.google.com')
+        return True
+    except:
+        return False
+    
+
 '''def My_IP():
     output = subprocess.check_output(["ipconfig", "/all"], universal_newlines=True)
     for line in output.split("\n"):
@@ -102,24 +102,19 @@ def main():
 
 
 def Bill_Number() -> Generator:
-    '''
-        Should Update The lower bound every time the program starts (JUST IN CASE)   => SELECT * FROM your_table ORDER BY your_primary_key_column DESC LIMIT 1;  
-        Query to fetch the last element    ====> 
-        ### Should Try getting one arguement as latest bill number and start from it(Lowerbound to that parameter)
+    
+    global cur
+    cur.execute("SELECT * FROM bills ORDER BY bill_no DESC LIMIT 1")
+    Latest_Bill=cur.fetchone()
+    if Latest_Bill is None:
+        Latest_Bill_No=10000
+    else:
+        Latest_Bill_No=Latest_Bill[0]
+    for Bill_Number in range(Latest_Bill_No+1,100000):
+        yield Bill_Number
 
-        ---------------------------
-        def Bill_Number(Latest_Bill_No :int) -> Generator:
-            for Bill_Number in range(Latest_Bill_No+1,100000):
-                yield Bill_Number
-        ---------------------------
-
-        Log Bills to DB
-    '''
-    for i in range(10000,100000):
-        yield i
-
-Bill_No :Generator = Bill_Number()                                  #Memory Efficient way to generate bill no. successively (Generator Object)
-
+Bill_No_Gen :Generator = Bill_Number()                              #Memory Efficient way to generate bill no. successively (Generator Object)
+Bill_No=int()
 def Auth(user :str ,pwd :str) -> None :
 
     '''           Getting Authentication Data from Server                '''
@@ -213,6 +208,8 @@ class BMS_Home_GUI(QMainWindow):
         '''
         Should Set the Column width from code appropriately 
         '''
+        global Bill_No
+        Bill_No=next(Bill_No_Gen)
         super(BMS_Home_GUI,self).__init__()
         uic.loadUi("BMS_Home_GUI.ui", self)
         aspect_ratio = 16/9  # Common aspect ratio for 720p
@@ -227,7 +224,10 @@ class BMS_Home_GUI(QMainWindow):
             self.menuStock.setEnabled(True)
             self.New_Bill_Tab.setEnabled(True)                             #Should Set back to Flase at exit
         self.show()
-        self.Bill_Number_Label.setText("Bill No    : {}".format(next(Bill_No)))
+        self.setup()
+    def setup(self):
+        global Bill_No
+        self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))
         self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
         self.Billed_By_Label.setText("Billed By : {}".format(User))
         self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
@@ -382,7 +382,7 @@ class BMS_Home_GUI(QMainWindow):
                         pass
                     except:
                         pass
-
+            global total
             net_total=int()
             total=float()
             discount=float()
@@ -412,10 +412,21 @@ class BMS_Home_GUI(QMainWindow):
 
 
     def log_bill(self):
-        with open("Bills//{}".format(next(Bill_No)),'w') as Bill:
+        if total==0:
+            return
+        global Bill_No,cur
+        with open("Bills//{}".format((Bill_No)),'w') as Bill:
             Bill.writelines("")
 ###################################################
-            ...
+        ...
+        cur.execute("insert into bills values ({},'{}',{},'{}')".format(Bill_No,(date.today().strftime("%d %B, %Y")),total,User))
+        con.commit()
+        global bill_data
+        for key in bill_data.keys(): 
+            self.Bill_Table.setItem(bill_data[key],ID_Col,QTableWidgetItem(str()))
+        Bill_No=next(Bill_No_Gen)
+        bill_data=dict()   #reinitializing the item data stored and hence resetting the Table
+        self.setup()
     def logout(self):
         confirmation_dialog = QMessageBox(self)
         confirmation_dialog.setWindowTitle("Confirmation")
