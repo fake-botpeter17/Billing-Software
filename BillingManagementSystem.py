@@ -36,7 +36,9 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
     import pandas
     from math import * 
 '''
-
+Admin = False
+Name=str()
+Designation=None
 User=str()                  #Stores the current user info
 bill_data=dict()           #Acts as temp for Current Bill items
 def Init():
@@ -151,10 +153,13 @@ OUTPUT:
     f=open("BillingInfo.dat","rb+")
     data=load(f)
     f.close()
-    salt=data[check[-1]]
+    salt=data[check[3]]
     password=hashpw(pwd.encode(),salt)
     if str(password)==check[2]:                                                                                                                  #Checking if the Passwords Match
-        if check[1].casefold()=="Admin".casefold():
+        global Designation,Name
+        Designation=check[1].title()
+        Name=check[4]
+        if Designation.casefold()=="Admin".casefold():
             global Admin
             Admin=True                                                                                                                   #Setting the role as Admin if it is so                                                                         
             messagebox.showinfo(title="Login Successful!",message="You are now logged in as Admin.")
@@ -232,7 +237,7 @@ class BMS_Home_GUI(QMainWindow):
         self.setTheme("")
         self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))
         self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
-        self.Billed_By_Label.setText("Billed By : {}".format(User))
+        self.Billed_By_Label.setText("Billed By : {} ({})".format(Name,Designation))
         self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
         self.actionLogout.triggered.connect(lambda: self.logout())
         self.actionThemes.triggered.connect(lambda: self.setTheme())   
