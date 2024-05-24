@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtWidgets import QTableWidget 
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
+from PyQt6.QtCore import Qt
 from bcrypt import hashpw
 from pickle import load
 from datetime import datetime,date
@@ -35,8 +36,8 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
     from math import * 
 '''
 
-User=str()
-bill_data=dict()
+User=str()                  #Stores the current user info
+bill_data=dict()           #Acts as temp for Current Bill items
 def Init():
     '''
     Should Change the Logic for checking the Network Connectivity
@@ -212,12 +213,12 @@ class BMS_Home_GUI(QMainWindow):
         Bill_No=next(Bill_No_Gen)
         super(BMS_Home_GUI,self).__init__()
         uic.loadUi("BMS_Home_GUI.ui", self)
-        aspect_ratio = 16/9  # Common aspect ratio for 720p
-        min_height = 720
+        aspect_ratio = 16/9  # aspect ratio 
+        min_height = 900
         min_width = int(min_height * aspect_ratio)
         self.setMinimumSize(min_width,min_height)
         self.setWindowTitle("BMS -botpeter17")
-        icon=QIcon("My_Icon.jpeg")
+        icon=QIcon("My_Icon.ico")
         self.setWindowIcon(icon)
         if Admin:
             self.menuSales.setEnabled(True)
@@ -237,33 +238,79 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setRowCount(18)
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
         self.Print_Button.clicked.connect(self.log_bill)           #######################
+        #Setting Column Widths
+        #Didn't define the width of price col to allow resizing
+        self.Bill_Table.setColumnWidth(0, 100)
+        self.Bill_Table.setColumnWidth(ID_Col,150)
+        self.Bill_Table.setColumnWidth(Name_Col,350)
+        self.Bill_Table.setColumnWidth(Rate_Col,150)
+        self.Bill_Table.setColumnWidth(Qnty_Col,150)
+        self.Bill_Table.setColumnWidth(Disc_prcnt_Col,175)
+        self.Bill_Table.setColumnWidth(Disc_Col,175)
+
     
     def handle_cell_change(self, row, col):
         if row is not None:
-            if col==ID_Col:
+            if col==ID_Col:       #Change in ID Column
                 self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                 try:
-                    Item_ID=int(self.Bill_Table.item(row,1).text())
+                    s=self.Bill_Table.item(row,1).text()
+                    Item_ID=int(s)
+                    try:
+                        item=QTableWidgetItem(s)
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,ID_Col,item)
+                    except:
+                        pass
+
                 except:
-                    if self.Bill_Table.item(row,1).text()=="" or self.Bill_Table.item(row,1).text()==None:
-                        self.Bill_Table.setItem(row,0,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Name_Col,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Rate_Col,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str('')))
-                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str("")))
+                    if self.Bill_Table.item(row,ID_Col).text()=="" or self.Bill_Table.item(row,ID_Col).text()==None:
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,0,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Name_Col,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Rate_Col,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Qnty_Col,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_Col,item)
+                        item=QTableWidgetItem("")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Price_Col,item)
                 try:
                     cur.execute("select name,selling_price from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
                     if row in bill_data.values():
-                        self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
-                        self.Bill_Table.setItem(row,Name_Col,QTableWidgetItem(''))
-                        self.Bill_Table.setItem(row,Rate_Col,QTableWidgetItem(""))
-                        self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
-                        self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
-                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
-                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(0)))
+                        item=QTableWidgetItem(str(row+1))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,0,item)
+                        item=QTableWidgetItem('')
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Name_Col,item)
+                        item=QTableWidgetItem('')
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Rate_Col,item)
+                        item=QTableWidgetItem(str(1))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Qnty_Col,item)
+                        item=QTableWidgetItem(str(0))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
+                        item=QTableWidgetItem(str(0))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_Col,item)
+                        item=QTableWidgetItem(str(0))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Price_Col,item)
                         for key in bill_data.keys():
                             if bill_data[key]==row:
                                 break
@@ -271,52 +318,86 @@ class BMS_Home_GUI(QMainWindow):
                             
                     if data is not None:
                         if Item_ID in bill_data.keys():
-                            self.Bill_Table.setItem(row,ID_Col,QTableWidgetItem(""))
+                            item=QTableWidgetItem("")
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,ID_Col,item)
                             row=bill_data[Item_ID]
                             qnty=int(self.Bill_Table.item(row,Qnty_Col).text())
-                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(qnty+1)))
+                            item=QTableWidgetItem(str(qnty+1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Qnty_Col,item)
                             try:
                                 Quantity=int(self.Bill_Table.item(row,4).text())
                                 Rate=int(self.Bill_Table.item(row,3).text())
                                 Price=Quantity*Rate
-                                self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))                                
+                                item=QTableWidgetItem(str(Price))
+                                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                self.Bill_Table.setItem(row,Price_Col,item)                                
                             except:
                                 pass
                             pass
                         else:
                             Item_Name, Item_Rate = data
-                            self.Bill_Table.setItem(row, Name_Col, QTableWidgetItem(Item_Name))  # Set item in table
-                            self.Bill_Table.setItem(row, Rate_Col, QTableWidgetItem(str(Item_Rate)))  # Set item in 
-                            self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
-                            self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
-                            self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
-                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
-                            self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Item_Rate)))
+                            item=QTableWidgetItem(Item_Name)
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row, Name_Col, item)  # Set item in table
+                            item=QTableWidgetItem(str(Item_Rate))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row, Rate_Col, item)  # Set item in 
+                            item=QTableWidgetItem(str(row+1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,0,item)
+                            item=QTableWidgetItem(str(0))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
+                            item=QTableWidgetItem(str(0))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Disc_Col,item)
+                            item=QTableWidgetItem(str(1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Qnty_Col,item)
+                            item=QTableWidgetItem(str(Item_Rate))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Price_Col,item)
                             bill_data[Item_ID] = row
                     else:
                         if Item_ID in bill_data.keys():
-                            self.Bill_Table.setItem(row,ID_Col,QTableWidgetItem(""))
+                            item=QTableWidgetItem("")
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,ID_Col,item)
                             row=bill_data[Item_ID]
                             qnty=int(self.Bill_Table.item(row,Qnty_Col).text())
-                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(qnty+1)))
+                            item=QTableWidgetItem(str(qnty+1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Qnty_Col,item)
                             try:
                                 Quantity=int(self.Bill_Table.item(row,4).text())
                                 Rate=int(self.Bill_Table.item(row,3).text())
                                 Price=Quantity*Rate
-                                self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price)))                                
+                                item=QTableWidgetItem(str(Price))
+                                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                self.Bill_Table.setItem(row,Price_Col,item)                                
                             except:
                                 pass
                             pass
                         else:
-                            self.Bill_Table.setItem(row,0,QTableWidgetItem(str(row+1)))
-                            self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(0)))
-                            self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(0)))
-                            self.Bill_Table.setItem(row,Qnty_Col,QTableWidgetItem(str(1)))
+                            item=QTableWidgetItem(str(row+1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,0,item)
+                            item=QTableWidgetItem(str(0))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
+                            item=QTableWidgetItem(str(0))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Disc_Col,item)
+                            item=QTableWidgetItem(str(1))
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                            self.Bill_Table.setItem(row,Qnty_Col,item)
                             bill_data[Item_ID] = row
                 except:
                     pass
                 self.Bill_Table.cellChanged.connect(self.handle_cell_change)
-            elif col==Qnty_Col:
+            elif col==Qnty_Col:        #Change in Quantity Column 
                 try:
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                     Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
@@ -326,18 +407,26 @@ class BMS_Home_GUI(QMainWindow):
                         Discount_prct=float(self.Bill_Table.item(row,Disc_prcnt_Col).text())
                         Discount=Price*(Discount_prct/100)
                         Net_Price=Price-Discount
-                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Net_Price)))
-                        self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Discount,2))))
+                        item=QTableWidgetItem(str(Net_Price))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Price_Col,item)
+                        item=QTableWidgetItem(str(round(Discount,2)))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_Col,item)
                     except:
                         Discount=int(self.Bill_Table.item(row,Disc_Col).text())
                         Net_Price=Price-Discount
-                        self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Net_Price)))
+                        item=QTableWidgetItem(str(Net_Price))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Price_Col,item)
                         Discount_prct=Discount*100/Net_Price
-                        self.Bill_Table.setItem(row,Discount_Col,QTableWidgetItem(str(round(Discount_prct,2))))
+                        item=QTableWidgetItem(str(round(Discount_prct,2)))
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.Bill_Table.setItem(row,Disc_Col,item)
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
-            elif col==Disc_prcnt_Col:
+            elif col==Disc_prcnt_Col:      #Change in Discount Percent 
                 try:
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                     Discount_Percentage=int(self.Bill_Table.item(row,col).text())
@@ -346,12 +435,16 @@ class BMS_Home_GUI(QMainWindow):
                     Price=Quantity*Rate
                     Discount=Price*(Discount_Percentage/100)
                     Price_disc=Price-Discount
-                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
-                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Discount,2))))
+                    item=QTableWidgetItem(str(Price_disc))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Price_Col,item)
+                    item=QTableWidgetItem(str(round(Discount,2)))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Disc_Col,item)
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
-            elif col==Disc_Col:
+            elif col==Disc_Col:     #Change in Discount price
                 try:
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                     Discount=int(self.Bill_Table.item(row,col).text())
@@ -359,13 +452,17 @@ class BMS_Home_GUI(QMainWindow):
                     Rate=int(self.Bill_Table.item(row,3).text())
                     Price=Quantity*Rate
                     Price_disc=Price-Discount
-                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(Price_disc)))
+                    item=QTableWidgetItem(str(Price_disc))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Price_Col,item)
                     Disc_perc=((Discount/Price)*100)
-                    self.Bill_Table.setItem(row,Disc_prcnt_Col,QTableWidgetItem(str(round(Disc_perc,2))))
+                    item=QTableWidgetItem(str(round(Disc_perc,2)))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     pass
-            elif col==Rate_Col:
+            elif col==Rate_Col:      #Change in rate column 
                 try:
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                     Rate=int(self.Bill_Table.item(row,col).text())
@@ -373,8 +470,12 @@ class BMS_Home_GUI(QMainWindow):
                     Price=Quantity*Rate
                     Discount=int(self.Bill_Table.item(row,Disc_prcnt_Col).text())
                     Disc_Price=Price*Discount/100
-                    self.Bill_Table.setItem(row,Disc_Col,QTableWidgetItem(str(round(Disc_Price,2))))
-                    self.Bill_Table.setItem(row,Price_Col,QTableWidgetItem(str(round((Price - Disc_Price),2))))
+                    item=QTableWidgetItem(str(round(Disc_Price,2)))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Disc_Col,item)
+                    item=QTableWidgetItem(str(round((Price - Disc_Price),2)))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.Bill_Table.setItem(row,Price_Col,item)
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
                 except:
                     try:
@@ -386,7 +487,7 @@ class BMS_Home_GUI(QMainWindow):
             net_total=int()
             total=float()
             discount=float()
-            try:
+            try:                         #Net Totals and discounts calculation
                 for key in bill_data.keys():
                     self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
                     try:
