@@ -1,8 +1,6 @@
 '''                 IMPORTS                       '''
 
-import glob
-from time import sleep
-from typing import Generator, Never,NoReturn
+from typing import Generator
 from psycopg2 import *
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
 from PyQt6.QtWidgets import * 
@@ -15,8 +13,6 @@ from pickle import load
 from datetime import datetime,date
 from urllib import request
 import psycopg2
-import subprocess
-import UserRegistration
 import os
 import sys
 import atexit
@@ -32,6 +28,9 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 #  Imports that aren't required (FOR NOW)
 
 '''
+    import UserRegistration
+    from time import sleep
+    import subprocess
     import pyarrow
     import pandas
     from math import * 
