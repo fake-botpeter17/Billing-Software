@@ -264,34 +264,24 @@ class BMS_Home_GUI(QMainWindow):
             event.accept()  
         else:
             event.ignore() 
-        '''
-        @atexit.register
-def closure():
-    try:
-        if not(cur.closed):
-            con.close()
-    except:
-        pass
-    global Admin
-    Admin=False'''
 
     def handle_cell_change(self, row, col):
         if row is not None:
             if col==ID_Col:       #Change in ID Column
                 self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
-                try:
+                try:      #Checking if the ID is entered or deleted
                     s=self.Bill_Table.item(row,1).text()
                     Item_ID=int(s)
-                    try:
+                    try:   #IF entered, Aligning it to the center
                         item=QTableWidgetItem(s)
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,ID_Col,item)
                     except:
                         pass
 
-                except:
+                except:    #If ID is not readable, checking if it was removed
                     if self.Bill_Table.item(row,ID_Col).text()=="" or self.Bill_Table.item(row,ID_Col).text()==None:
-                        item=QTableWidgetItem("")
+                        item=QTableWidgetItem("")   #IF removed, setting back to defaults
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,0,item)
                         item=QTableWidgetItem("")
@@ -312,10 +302,10 @@ def closure():
                         item=QTableWidgetItem("")
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,Price_Col,item)
-                try:
+                try:      #If ID is entered, Checking if it is in database
                     cur.execute("select name,selling_price from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
-                    if row in bill_data.values():
+                    if row in bill_data.values():    #Checking if the row is new or is it being updated
                         item=QTableWidgetItem(str(row+1))
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,0,item)
@@ -342,7 +332,7 @@ def closure():
                                 break
                         bill_data.pop(key,None)
                             
-                    if data is not None:
+                    if data is not None:    #If the elemnt is present in the db, proceed
                         if Item_ID in bill_data.keys():
                             item=QTableWidgetItem("")
                             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -363,7 +353,7 @@ def closure():
                                 pass
                             pass
                         else:
-                            Item_Name, Item_Rate = data
+                            Item_Name, Item_Rate = data    #Initialising the data received from the DB
                             item=QTableWidgetItem(Item_Name)
                             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                             self.Bill_Table.setItem(row, Name_Col, item)  # Set item in table
@@ -533,22 +523,39 @@ def closure():
             except:
                 try:
                     self.Bill_Table.cellChanged.connect(self.handle_cell_change)
-                    pass
                 except:
                     pass
 
 
     def log_bill(self):
         try:
-            if total==0:
+            if total==0 or total is None:
                 return
         except:
             return
-        global Bill_No,cur
-        with open("Bills//{}".format((Bill_No)),'w') as Bill:
-            Bill.writelines("")
+        global Bill_No
+        with open("Bills//{}.txt".format(Bill_No),'w') as Bill:
+            Bill.write(f"{"FASHION PARADISE":^75}")
+            Bill.write("\n")
+            Bill.write(f"{"No. 1, Richwood Avenue,":^80}")
+            Bill.write("\n")
+            Bill.write(f"{"Thaiyur Market Road, Kelambakkam, Chennai - 603 103.":^65}")
+            Bill.write("\n")
+            Bill.write(f"{"~":~^50}")
+            Bill.write("\n")
+            bn=f"Bill No: {Bill_No}"   #Bill No
+            dnt=datetime.now().strftime("%H:%M, %d %B %Y ")
+            Bill.write(f"{bn:<{len(bn)}}{'INVOICE':^{73-len(bn)-len(dnt)}}{dnt:>{len(dnt)}}")
+            Bill.write("\n")
+            Bill.write(f"{"~":~^50}")
+            Bill.write("\n")
+            Bill.write(f"{"Name":<10}{'Qty':<10}{'Rate':<10}{'Price':<10}{'Discount(%)':<10}{'Discount':<10}{'Net Price':<10}")
             '''
             Should add bill(text) content after determining the Paper size
+            Plan Changed
+
+            Using HTML with placeholders for billing
+            and then use weasyprint for converting it to pdf and then use jinja for HTML Manipulation
             '''
         ...
         cur.execute("insert into bills values ({},'{}',{},'{}')".format(Bill_No,(date.today().strftime("%d %B, %Y")),total,User))
