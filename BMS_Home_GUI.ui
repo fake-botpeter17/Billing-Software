@@ -517,7 +517,7 @@
                 <item row="3" column="0">
                  <widget class="QLabel" name="label">
                   <property name="text">
-                   <string> </string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -597,6 +597,7 @@
     </property>
     <addaction name="Profile"/>
     <addaction name="actionLogout"/>
+    <addaction name="actionThemes"/>
    </widget>
    <addaction name="New_Bill_Tab"/>
    <addaction name="Quit_Tab"/>
@@ -648,6 +649,11 @@
   <action name="Exit_Button">
    <property name="text">
     <string>Logout and Exit</string>
+   </property>
+  </action>
+  <action name="actionThemes">
+   <property name="text">
+    <string>Themes</string>
    </property>
   </action>
  </widget>

@@ -1,5 +1,6 @@
 '''                 IMPORTS                       '''
 
+from tkinter.filedialog import askopenfilename
 from typing import Generator
 from psycopg2 import *
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
@@ -228,11 +229,13 @@ class BMS_Home_GUI(QMainWindow):
         self.setup()
     def setup(self):
         global Bill_No
+        self.setTheme("")
         self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))
         self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
         self.Billed_By_Label.setText("Billed By : {}".format(User))
         self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
-        self.actionLogout.triggered.connect(lambda: self.logout())   
+        self.actionLogout.triggered.connect(lambda: self.logout())
+        self.actionThemes.triggered.connect(lambda: self.setTheme())   
         self.Profile.triggered.connect(lambda: Profile_(User))        # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)
         self.Bill_Table.setRowCount(18)
@@ -274,6 +277,21 @@ def closure():
         pass
     global Admin
     Admin=False'''
+    def setTheme(self,path: None| str=None) -> None:
+        if path is None:
+            path=askopenfilename(title="Select Theme",
+                             initialdir="Qt Resources//Themes//",
+                             filetypes=(('QSS', '*.qss'),
+                                        ))
+            if path is None:
+                return
+        try:
+            with open(path) as f:
+                stylesheet=f.read()
+                self.setStyleSheet(stylesheet)
+                self.setup()
+        except:
+            pass
 
     def handle_cell_change(self, row, col):
         if row is not None:
