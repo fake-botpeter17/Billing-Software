@@ -1,5 +1,6 @@
 '''                 IMPORTS                       '''
 
+import glob
 from time import sleep
 from typing import Generator, Never,NoReturn
 from psycopg2 import *
@@ -248,7 +249,33 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setColumnWidth(Disc_prcnt_Col,175)
         self.Bill_Table.setColumnWidth(Disc_Col,175)
 
-    
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Exit?',
+                                     "Are you sure you want to quit?",
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
+            global Admin
+            Admin = False
+            try:
+                global con
+                con.close()
+            except:
+                pass
+            event.accept()  
+        else:
+            event.ignore() 
+        '''
+        @atexit.register
+def closure():
+    try:
+        if not(cur.closed):
+            con.close()
+    except:
+        pass
+    global Admin
+    Admin=False'''
+
     def handle_cell_change(self, row, col):
         if row is not None:
             if col==ID_Col:       #Change in ID Column
@@ -499,7 +526,7 @@ class BMS_Home_GUI(QMainWindow):
                     except:
                         pass
                     self.Net_Discount_Label.setText("Net Discount    : "+str(round(discount,2)))
-                    net_total=(total+discount)
+                    net_total=round(total+discount,2)
                     self.Total_Label.setText("Total                  : "+str(round(total,2)))
                     self.Net_Total_Label.setText("Net Total          : "+str(net_total))
                     self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
