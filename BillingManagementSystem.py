@@ -194,6 +194,17 @@ def Login() -> None:
     username_entry=Entry(frame,font=("Helvetica",15))
     password_entry=Entry(frame,show='*',font=("Helvetica",15))                  #Setting the input type to password (masking with '*')
     login_button=Button(frame,text="Login",command=lambda: Auth(username_entry.get(),password_entry.get()),bg='#ffffff',fg='#FF3399')
+    login_window.bind('<Return>', lambda event: ValidateEntry())
+
+    def ValidateEntry():
+        if username_entry.get() and password_entry.get():
+            login_button.invoke()
+        elif ((len(username_entry.get())==0) and (len(password_entry.get())==0)):
+            messagebox.showerror(title= "Authentication Error!",message = 'Enter the Username and Password!')
+        elif len(username_entry.get())==0:
+            messagebox.showerror(title= "Authentication Error!",message = 'Enter the Username!')
+        elif len(password_entry.get())==0:
+            messagebox.showerror(title= "Authentication Error!",message = 'Enter the Password!')
 
     '''       Setting Layout and Displaying         '''
 
