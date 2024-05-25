@@ -38,6 +38,7 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
 '''
 Admin = False
 Name=str()
+logging_out=False
 Designation=None
 User=str()                  #Stores the current user info
 bill_data=dict()           #Acts as temp for Current Bill items
@@ -195,7 +196,6 @@ def Login() -> None:
     password_entry=Entry(frame,show='*',font=("Helvetica",15))                  #Setting the input type to password (masking with '*')
     login_button=Button(frame,text="Login",command=lambda: Auth(username_entry.get(),password_entry.get()),bg='#ffffff',fg='#FF3399')
     login_window.bind('<Return>', lambda event: ValidateEntry())
-
     def ValidateEntry():
         if username_entry.get() and password_entry.get():
             login_button.invoke()
@@ -268,6 +268,9 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setColumnWidth(Disc_Col,175)
 
     def closeEvent(self, event):
+        global logging_out
+        if logging_out:
+            return
         reply = QMessageBox.question(self, 'Exit?',
                                      "Are you sure you want to quit?",
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -294,13 +297,14 @@ def closure():
     global Admin
     Admin=False'''
     def setTheme(self,path: None| str=None) -> None:
-        if path is None:
-            path=askopenfilename(title="Select Theme",
-                             initialdir="Qt Resources//Themes//",
-                             filetypes=(('QSS', '*.qss'),
-                                        ))
+        try:
             if path is None:
-                return
+                path=askopenfilename(title="Select Theme",
+                                 initialdir="Qt Resources//Themes//",
+                                 filetypes=(('QSS', '*.qss'),
+                                            ))
+        except:
+            pass
         try:
             with open(path) as f:
                 stylesheet=f.read()
@@ -601,6 +605,8 @@ def closure():
         confirmation_dialog.setIcon(QMessageBox.Icon.Question)
         reply=confirmation_dialog.exec()
         if reply==QMessageBox.StandardButton.Yes:
+            global Admin, logging_out
+            logging_out=True
             Admin=False
             self.menuSales.setEnabled(False)
             self.menuStock.setEnabled(False)
