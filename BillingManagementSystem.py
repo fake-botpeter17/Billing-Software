@@ -245,7 +245,7 @@ class BMS_Home_GUI(QMainWindow):
         self.setup()
     def setup(self):
         global Bill_No
-        self.setTheme("")
+        self.setTheme("Qt resources//Theme//Charcoal.qss")
         self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))
         self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
         self.Billed_By_Label.setText("Billed By : {} ({})".format(Name,Designation))
@@ -254,7 +254,7 @@ class BMS_Home_GUI(QMainWindow):
         self.actionThemes.triggered.connect(lambda: self.setTheme())   
         self.Profile.triggered.connect(lambda: Profile_(User))        # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)
-        self.Bill_Table.setRowCount(18)
+        self.Bill_Table.setRowCount(26)
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
         self.Print_Button.clicked.connect(self.log_bill)           #######################
         #Setting Column Widths
