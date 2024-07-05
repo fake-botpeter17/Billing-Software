@@ -2,10 +2,10 @@
 
 from tkinter.filedialog import askopenfilename
 from typing import Generator
-from psycopg2 import *
+from psycopg2 import connect
 from tkinter import Tk,Frame,Label,Entry,Button,messagebox          
-from PyQt6.QtWidgets import * 
-from PyQt6.QtWidgets import QTableWidget 
+#from PyQt6.QtWidgets import *
+from PyQt6.QtWidgets import QTableWidget , QMainWindow, QApplication, QTableWidgetItem, QMessageBox
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
@@ -13,10 +13,9 @@ from bcrypt import hashpw
 from pickle import load
 from datetime import datetime,date
 from urllib import request
-import psycopg2
-import os
-import sys
-import atexit
+from os import getenv as cred
+from sys import exit as exi
+from atexit import register as exit_manager
 
 #Global Declaration of Column Position
 Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,7
@@ -36,12 +35,12 @@ Name_Col,Rate_Col,ID_Col,Qnty_Col,Disc_prcnt_Col,Disc_Col,Price_Col=2,3,1,4,5,6,
     import pandas
     from math import * 
 '''
-Admin = False
-Name=str()
+Admin = False               #Used for Authentication and permissions
+Name=str()                  #Name of the 
 logging_out=False
 Designation=None
 User=str()                  #Stores the current user info
-bill_data=dict()           #Acts as temp for Current Bill items
+bill_data=dict()          # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 def Init():
     '''
     Should Change the Logic for checking the Network Connectivity
@@ -53,11 +52,11 @@ def Init():
         sleep(5)'''
     try:
         global con
-        con=connect(host="{}".format(os.getenv('Database_Host')), 
-                    database = "{}".format(os.getenv('Database_Name')),
-                    user = "{}".format(os.getenv("Database_User")),
-                    password ="{}".format(os.getenv('Database_Pwd')), 
-                    port = "{}".format(os.getenv("Database_Port")))                                 #Establishing Connection to the Server
+        con=connect(host=f"{cred('Database_Host')}", 
+                    database = f"{cred('Database_Name')}",
+                    user = f"{cred('Database_User')}",
+                    password =f"{cred('Database_Pwd')}", 
+                    port = f"{cred('Database_Port')}")                                 #Establishing Connection to the Server
         '''except psycopg2.Error as e:
         messagebox.showerror("Authentication Error", "Error connecting to the database server: {}".format(e))
         messagebox.showinfo("Error","Try opening the program as Administrator")
@@ -70,8 +69,8 @@ def Init():
     Admin=False
     Login()
 
-@atexit.register
-def closure():
+@exit_manager
+def closure() -> None:
     try:
         if not(cur.closed):
             con.close()
@@ -85,6 +84,8 @@ def check_Internet() -> bool:
         request.urlopen('https://www.google.com')
         return True
     except:
+        #Should add offline functionality
+
         return False
     
 
@@ -103,7 +104,7 @@ def main():
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
-    sys.exit(app.exec())
+    exi(app.exec())
 
 
 def Bill_Number() -> Generator:
@@ -144,7 +145,7 @@ OUTPUT:
     select * from Student Details where Last Name=N
 
     '''                                  
-    check :tuple|None=cur.fetchone()                                                        #Column Layout -> [(uid,designation,pwd,salt_id)]
+    check :tuple|None=cur.fetchone()                                                        #Column Layout -> [(id,designation,pwd,salt_id)]
     if check is None:
         messagebox.showerror("Error","User Not found!!")
         return
@@ -238,25 +239,25 @@ class BMS_Home_GUI(QMainWindow):
         icon=QIcon("My_Icon.ico")
         self.setWindowIcon(icon)
         if Admin:
-            self.menuSales.setEnabled(True)
-            self.menuStock.setEnabled(True)
-            self.New_Bill_Tab.setEnabled(True)                             #Should Set back to Flase at exit
+            self.menuSales.setEnabled(True)             #type:ignore
+            self.menuStock.setEnabled(True)         #type:ignore
+            self.New_Bill_Tab.setEnabled(True)                             #type:ignore #Should Set back to Flase at exit
         self.show()
         self.setup()
     def setup(self):
         global Bill_No
         self.setTheme("Qt resources//Theme//Charcoal.qss")
-        self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))
-        self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))
-        self.Billed_By_Label.setText("Billed By : {} ({})".format(Name,Designation))
-        self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
-        self.actionLogout.triggered.connect(lambda: self.logout())
-        self.actionThemes.triggered.connect(lambda: self.setTheme())   
-        self.Profile.triggered.connect(lambda: Profile_(User))        # Should Change after defining Profile GUI
-        self.Bill_Table.setColumnCount(8)
-        self.Bill_Table.setRowCount(26)
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)
-        self.Print_Button.clicked.connect(self.log_bill)           #######################
+        self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))         #type:ignore
+        self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))           #type:ignore
+        self.Billed_By_Label.setText("Billed By : {} ({})".format(Name,Designation))                #type:ignore
+        self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))            #type:ignore
+        self.actionLogout.triggered.connect(lambda: self.logout())                      #type:ignore
+        self.actionThemes.triggered.connect(lambda: self.setTheme())                #type:ignore
+        self.Profile.triggered.connect(lambda: Profile_(User))        # Should Change after defining Profile GUI  #type:ignore
+        self.Bill_Table.setColumnCount(8)                       #type:ignore
+        self.Bill_Table.setRowCount(26)                         #type:ignore
+        self.Bill_Table.cellChanged.connect(self.handle_cell_change)                #type:ignore
+        self.Print_Button.clicked.connect(self.log_bill)           #type:ignore
         #Setting Column Widths
         #Didn't define the width of price col to allow resizing
         self.Bill_Table.setColumnWidth(0, 100)
@@ -306,75 +307,67 @@ def closure():
         except:
             pass
         try:
-            with open(path) as f:
+            with open(path ) as f:          #type:ignore
                 stylesheet=f.read()
                 self.setStyleSheet(stylesheet)
                 self.setup()
         except:
             pass
-
+    
+    def setBillColumn(self, row :int, column :int, value :str | int | float):
+        temp = QTableWidgetItem(str(value))
+        temp.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.Bill_Table.setItem(row, column, temp)      #type:ignore
+    
+    def setCellTracking(self, mode :bool) -> None:
+        if mode:
+            self.Bill_Table.cellChanged.connect(self.handle_cell_change)  #type:ignore
+            return
+        self.Bill_Table.cellChanged.disconnect(self.handle_cell_change) #type:ignore
+    
+    def getText(self, row :int,column :int) -> str:
+        return self.Bill_Table.item(row,column).text()  #type:ignore
+    
+    def resetRow(self, row :int) -> None:
+        for col in range(8):
+            self.setBillColumn(row, col, "")
+    
     def handle_cell_change(self, row, col):
         if row is not None:
             if col==ID_Col:       #Change in ID Column
-                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                self.setCellTracking(False)
                 try:
-                    s=self.Bill_Table.item(row,1).text()
+                    s=self.getText(row,ID_Col)
                     Item_ID=int(s)
-                    try:
-                        item=QTableWidgetItem(s)
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,ID_Col,item)
-                    except:
-                        pass
-
+                    del s
+                    if Item_ID not in bill_data:
+                        self.setBillColumn(row,ID_Col,Item_ID)
                 except:
-                    if self.Bill_Table.item(row,ID_Col).text()=="" or self.Bill_Table.item(row,ID_Col).text()==None:
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,0,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Name_Col,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Rate_Col,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Qnty_Col,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Disc_Col,item)
-                        item=QTableWidgetItem("")
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Price_Col,item)
+                    if self.Bill_Table.item(row,ID_Col).text()=="" or self.Bill_Table.item(row,ID_Col).text()==None:                #type:ignore
+                        self.resetRow(row)
                 try:
-                    cur.execute("select name,selling_price from items where id='{}'".format(Item_ID))
+                    cur.execute("select name,sp from items where id='{}'".format(Item_ID))
                     data=cur.fetchone()
-                    if row in bill_data.values():
-                        item=QTableWidgetItem(str(row+1))
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,0,item)
-                        item=QTableWidgetItem('')
+                    if row in bill_data.values():       #Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
+                        
+                        '''item=QTableWidgetItem('')
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,Name_Col,item)
                         item=QTableWidgetItem('')
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Rate_Col,item)
-                        item=QTableWidgetItem(str(1))
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Qnty_Col,item)
-                        item=QTableWidgetItem(str(0))
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
-                        item=QTableWidgetItem(str(0))
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Disc_Col,item)
+                        self.Bill_Table.setItem(row,Rate_Col,item)'''
+                        item_id = self.getText(row,ID_Col)
+                        if bill_data[item_id]==row:
+                            self.setBillColumn(row,Qnty_Col, int(self.getText(row,Qnty_Col))+1)
+                            discount = self.getText(row,Disc_prcnt_Col)
+                            
+                        self.setBillColumn(row,Qnty_Col,1)
+                        self.setBillColumn(row,Disc_prcnt_Col, 0)
+                        self.setBillColumn(row,Disc_Col,0)
                         item=QTableWidgetItem(str(0))
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,Price_Col,item)
+
                         for key in bill_data.keys():
                             if bill_data[key]==row:
                                 break
@@ -460,10 +453,10 @@ def closure():
                             bill_data[Item_ID] = row
                 except:
                     pass
-                self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                self.setCellTracking(True)
             elif col==Qnty_Col:        #Change in Quantity Column 
                 try:
-                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    self.setCellTracking(False)
                     Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
                     Rate=int(self.Bill_Table.item(row,Rate_Col).text())
                     Price=Quantity*Rate
@@ -487,12 +480,12 @@ def closure():
                         item=QTableWidgetItem(str(round(Discount_prct,2)))
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.Bill_Table.setItem(row,Disc_Col,item)
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
                 except:
                     pass
             elif col==Disc_prcnt_Col:      #Change in Discount Percent 
                 try:
-                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    self.setCellTracking(False)
                     Discount_Percentage=int(self.Bill_Table.item(row,col).text())
                     Quantity=int(self.Bill_Table.item(row,4).text())
                     Rate=int(self.Bill_Table.item(row,3).text())
@@ -505,12 +498,12 @@ def closure():
                     item=QTableWidgetItem(str(round(Discount,2)))
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.Bill_Table.setItem(row,Disc_Col,item)
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
                 except:
                     pass
             elif col==Disc_Col:     #Change in Discount price
                 try:
-                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    self.setCellTracking(False)
                     Discount=int(self.Bill_Table.item(row,col).text())
                     Quantity=int(self.Bill_Table.item(row,4).text())
                     Rate=int(self.Bill_Table.item(row,3).text())
@@ -523,12 +516,12 @@ def closure():
                     item=QTableWidgetItem(str(round(Disc_perc,2)))
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.Bill_Table.setItem(row,Disc_prcnt_Col,item)
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
                 except:
                     pass
             elif col==Rate_Col:      #Change in rate column 
                 try:
-                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    self.setCellTracking(False)
                     Rate=int(self.Bill_Table.item(row,col).text())
                     Quantity=int(self.Bill_Table.item(row,Qnty_Col).text())
                     Price=Quantity*Rate
@@ -540,10 +533,10 @@ def closure():
                     item=QTableWidgetItem(str(round((Price - Disc_Price),2)))
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.Bill_Table.setItem(row,Price_Col,item)
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
                 except:
                     try:
-                        self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                        self.setCellTracking(True)
                         pass
                     except:
                         pass
@@ -553,7 +546,7 @@ def closure():
             discount=float()
             try:                         #Net Totals and discounts calculation
                 for key in bill_data.keys():
-                    self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)
+                    self.setCellTracking(False)
                     try:
                         total+=float((self.Bill_Table.item(bill_data[key],Price_Col).text()))
                     except:
@@ -567,10 +560,10 @@ def closure():
                     self.Total_Label.setText("Total                  : "+str(round(total,2)))
                     self.Net_Total_Label.setText("Net Total          : "+str(net_total))
                     self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
             except:
                 try:
-                    self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+                    self.setCellTracking(True)
                     pass
                 except:
                     pass
