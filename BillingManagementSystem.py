@@ -60,13 +60,13 @@ def Init():
     try:
         global con
         con = connect(
-            host=cred('Database_Host'),
-            database=cred('Database_Name'),
-            user=cred('Database_User'),
-            password=cred('Database_Pwd'),
-            port=cred('Database_Port'),
+            host = cred('Database_Host'),
+            database = cred('Database_Name'),
+            user = cred('Database_User'),
+            password = cred('Database_Pwd'),
+            port = cred('Database_Port'),
         )  # Establishing Connection to the Server
-    except:
+    except :
         messagebox.showerror(
             "Connection Error",
             "Error connecting to the Server!!\n\nTry opening the program as Administrator",
@@ -570,12 +570,15 @@ def closure():
                     pass
 
     def log_bill(self):
+        global bill_data, Bill_No, cur
         try:
-            if total == 0:
+            if len(bill_data) == 0:
+                messagebox.showerror(
+            title="Error!", message="Add some items to the cart!"
+        )
                 return
         except:
             return
-        global Bill_No, cur
         with open("Bills//{}.txt".format((Bill_No)), "w") as Bill:
             Bill.writelines("")
             """
@@ -588,7 +591,6 @@ def closure():
             )
         )
         con.commit()
-        global bill_data
         for key in bill_data.keys():
             self.setBillColumn(bill_data[key], ID_Col, "")
         Bill_No = next(Bill_No_Gen)
