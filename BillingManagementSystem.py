@@ -60,11 +60,11 @@ def Init():
     try:
         global con
         con = connect(
-            host=f"{cred('Database_Host')}",
-            database=f"{cred('Database_Name')}",
-            user=f"{cred('Database_User')}",
-            password=f"{cred('Database_Pwd')}",
-            port=f"{cred('Database_Port')}",
+            host=cred('Database_Host'),
+            database=cred('Database_Name'),
+            user=cred('Database_User'),
+            password=cred('Database_Pwd'),
+            port=cred('Database_Port'),
         )  # Establishing Connection to the Server
     except:
         messagebox.showerror(
@@ -635,5 +635,5 @@ class Profile_GUI(QMainWindow):
         """
         ...
 
-
-Init()
+if __name__ == '__main__':
+    Init()
