@@ -3,7 +3,7 @@
 from tkinter.filedialog import askopenfilename
 from typing import Generator
 from psycopg2 import connect
-from tkinter import Radiobutton, Tk, Frame, Label, Entry, Button, messagebox
+from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QTableWidget,
     QMainWindow,
@@ -83,10 +83,13 @@ def closure() -> None:
     try:
         if not (cur.closed):
             con.close()
+            print("Connection Closed")
     except:
+        print("Connection already closed!")
         pass
     global Admin
     Admin = False
+    print("Admin set to False")
 
 
 def check_Internet() -> bool:
@@ -299,6 +302,18 @@ class BMS_Home_GUI(QMainWindow):
         global logging_out
         if logging_out:
             return
+        global bill_data
+        if len(bill_data)!=0:
+            reply = QMessageBox.question(self, 
+                                         'Exit?', "The current cart will be discarded! Continue?", 
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                           QMessageBox.StandardButton.No)
+            if reply != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+            else:
+                event.accept()
+                return
         reply = QMessageBox.question(
             self,
             "Exit?",
