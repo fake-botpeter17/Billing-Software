@@ -66,7 +66,7 @@ def Init():
             password = cred('Database_Pwd'),
             port = cred('Database_Port'),
         )  # Establishing Connection to the Server
-    except :
+    except:
         messagebox.showerror(
             "Connection Error",
             "Error connecting to the Server!!\n\nTry opening the program as Administrator",
@@ -347,7 +347,7 @@ def closure():
             pass
 
     def setBillColumn(self, row: int, column: int, value: str | int | float = ""):
-        temp = QTableWidgetItem(str(value))
+        temp = QTableWidgetItem(str(self.ValueHandle(value)))
         temp.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self.Bill_Table.setItem(row, column, temp)  # type:ignore
 
@@ -363,6 +363,16 @@ def closure():
     def resetRow(self, row: int) -> None:
         for col in range(8):
             self.setBillColumn(row, col, "")
+
+    @staticmethod
+    def ValueHandle(value :str | int | float) -> int | float | str:
+        if isinstance(value,str):
+            return value
+        if not isinstance(value,float):
+            return value
+        if value%round(value) == 0:
+                return int(value)
+        return value
 
     def handle_cell_change(self, row, col):
         if row is not None:
@@ -525,14 +535,14 @@ def closure():
             elif col == Name_Col:   #Change in Name column
                 try:
                     self.setCellTracking(False)
-                    name = self.getText(row,Name_Col)
-                    self.setBillColumn(row,Name_Col,name)
-                    self.setBillColumn(row,0,row+1)
-                    if self.getText(row,Price_Col) in [None, ""]:
+                    name = self.getText(row,Name_Col)           #Gets the value to center align
+                    self.setBillColumn(row,Name_Col,name)       
+                    self.setBillColumn(row,0,row+1)                 
+                    if self.getText(row,Price_Col) == "":
                         self.setBillColumn(row, Price_Col, 0)
                         self.setBillColumn(row, Disc_Col, 0)
                         self.setBillColumn(row, Disc_prcnt_Col, 0)
-                    if self.getText(row,Qnty_Col) in [None, ""]:
+                    if self.getText(row,Qnty_Col) == "":
                         self.setBillColumn(row,Qnty_Col,1)
                 except:
                     pass
@@ -556,10 +566,10 @@ def closure():
                         discount += float(self.getText(bill_data[key], Disc_Col))
                     except:
                         pass
-                    self.Net_Discount_Label.setText("Net Discount    : " + str(round(discount, 2)))     # type:ignore
+                    self.Net_Discount_Label.setText("Net Discount    : " + str(self.ValueHandle(round(discount, 2))))     # type:ignore
                     net_total = round(total + discount, 2)  # type:ignore
-                    self.Total_Label.setText("Total                  : " + str(round(total, 2)))  # type:ignore
-                    self.Net_Total_Label.setText("Net Total          : " + str(net_total))  # type:ignore
+                    self.Total_Label.setText("Total                  : " + str(self.ValueHandle(round(total, 2))))  # type:ignore
+                    self.Net_Total_Label.setText("Net Total          : " + str(self.ValueHandle(net_total)))  # type:ignore
                     self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))  # type:ignore
                     self.setCellTracking(True)
             except:
