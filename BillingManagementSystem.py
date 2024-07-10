@@ -210,15 +210,15 @@ def Login() -> None:
     login_button = Button(
         frame,
         text="Login",
-        command=lambda: Auth(username_entry.get(), password_entry.get()),
+        command=lambda: ValidateEntry(button=True),
         bg="#ffffff",
         fg="#FF3399",
     )
 
     login_window.bind("<Return>", lambda event: ValidateEntry())
 
-    def ValidateEntry():
-        if username_entry.get() and password_entry.get():
+    def ValidateEntry(button = False):
+        if (username_entry.get() and password_entry.get()) and not button:
             login_button.invoke()
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
             messagebox.showerror(
@@ -235,6 +235,8 @@ def Login() -> None:
                 title="Authentication Error!", 
                 message="Enter the Password!"
             )
+        else:
+            Auth(username_entry.get(), password_entry.get())
 
     """       Setting Layout and Displaying         """
 
