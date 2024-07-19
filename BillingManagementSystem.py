@@ -1,8 +1,6 @@
 # Imports
 from tkinter.filedialog import askopenfilename
 from typing import Generator
-from pymongo import MongoClient
-from urllib.parse import quote_plus
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QTableWidget,
@@ -14,10 +12,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
-from bcrypt import hashpw
-from pickle import load
+from urllib.request import Request, urlopen
+from json import loads
 from datetime import datetime, date
-from urllib import request
 from os import getenv as cred_
 from sys import exit as exi
 from atexit import register as exit_manager
@@ -34,46 +31,28 @@ User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
 
-def cred(attr :str, parse :bool = False) -> str | None:
-    """Returns the value of the environment variable with the given name."""
-    if not parse:
-        return cred_(attr)
-    env = cred_(attr)
-    if env is not None:
-        return quote_plus(env)
-    return None
+def get_Api() -> str:
+    """Returns the API URL for the server"""
+    from pickle import load
+    with open("Resources\\sak.dat", 'rb') as file:
+        return load(file).decode("utf-32")
+    
+url = get_Api()
 
 def Init() -> None:
     try:
-        global client, db
-        url = cred("Mongo_Con_Str")
-        if url is None:
-            raise ValueError("URL")
-        client = MongoClient(eval(url))
-        db_name = cred("Mongo_DB")
-        if db_name is None:
-            raise ValueError("DB")
-        db = client[db_name]
-    except ValueError as ve:
-        reason = ve.args
-        if reason == "URL":
-            messagebox.showerror("Error", "Server Authentication Failure! Contact Admin")
-        elif reason == "DB":
-            messagebox.showerror("Error", "Database Authentication Failure! Contact Admin")
+        if_connected_req = Request(f"{url}//connected")
+        with urlopen(if_connected_req) as responsee:
+            if loads(responsee.read().decode("utf-8")):
+                messagebox.showinfo("Success!", "Connected to the server successfully")
+            else:
+                messagebox.showerror("Error!", "Failed to connect to the server")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error: {e}")
         exit(True)
     global Admin
     Admin = False
     Login()
-
-@exit_manager
-def closure() -> None:
-    try:
-        if not client._opened:
-            client.close()
-    except:
-        pass
-    global Admin
-    Admin = False
 
 def main():
     global app
@@ -148,22 +127,13 @@ def Login() -> None:
     login_window.mainloop()
 #Authentication
 def Auth(user :str, pwd :str) -> None:
-    global db
-    users_table = db['users']
-    result = users_table.find_one({'uid':user},{'uid':False})
-    if result is None:
-        messagebox.showerror(title="Authentication Error!", message="Invalid Username! Try Again!")
-        return 
-    try:
-        with open("BillingInfo.dat",'rb+') as f:
-           data = load(f)
-    except FileNotFoundError:
-        messagebox.showerror(title="Application Error", message="abms.dll is missing! Contact Admin")
-        exit(True)
-    salt = data[result['salt']]
-    password = hashpw(pwd.encode(), salt)
+    req = Request(f"{url}//authenticate//{user}//{pwd}")
+    response_ =  urlopen(req)
+    response = response_.read().decode()
+    result = loads(response)
+    print(result,response)
     #Comparing Hashed Passwords
-    if str(password) == result['hashed_pwd']:  
+    if result is not None:  
         global Designation, Name
         Designation = result['designation'].title()
         Name = result['name']
@@ -251,11 +221,6 @@ class BMS_Home_GUI(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             global Admin
             Admin = False
-            try:
-                global client
-                client.close()
-            except:
-                pass
             event.accept()
         else:
             event.ignore()
@@ -308,7 +273,6 @@ def closure():
 
     def handle_cell_change(self, row, col):
         if row is not None:
-            items_table = client['BMS']['items']
             if col == ID_Col:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
@@ -324,7 +288,10 @@ def closure():
                     ):
                         self.resetRow(row)
                 try:
-                    data :dict | None = items_table.find_one({'id':Item_ID},{'_id':False,'id':False})
+                    req = Request(f"{url}//items//{Item_ID}")
+                    response = urlopen(req)
+                    data = response.read().decode("utf-8")
+                    data = loads(data)
                     if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
                         """item=QTableWidgetItem('')
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
