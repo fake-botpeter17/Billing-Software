@@ -9,3 +9,7 @@ Bills/*
 exec/*
 build/*
 setup.py
+.gitignore
+My_Icon_Resized.jpg
+My_Icon_Resized_Pro.jpg
+BMS Backup.sql
