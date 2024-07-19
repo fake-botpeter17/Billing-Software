@@ -1,6 +1,0 @@
-#TODO#
-1. The main GUI closes without warning when (x) is clicked   => Fixed
-2. The login page should have 2 buttons (login and cancel), and also a confirmation dialogue box should appear when (x) is clicked  => Fixed
-3. Should add Log bill to txt format and print dialogue should appear directly(automated is best)   => banch log_bill
-4. Should add add stock gui and view stock gui 
-5. Sales analysis
