@@ -1,9 +1,9 @@
-"""                 IMPORTS                       """
-
+# Imports
 from tkinter.filedialog import askopenfilename
 from typing import Generator
-from psycopg2 import connect
-from tkinter import Radiobutton, Tk, Frame, Label, Entry, Button, messagebox
+from pymongo import MongoClient
+from urllib.parse import quote_plus
+from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QTableWidget,
     QMainWindow,
@@ -18,85 +18,62 @@ from bcrypt import hashpw
 from pickle import load
 from datetime import datetime, date
 from urllib import request
-from os import getenv as cred
+from os import getenv as cred_
 from sys import exit as exi
 from atexit import register as exit_manager
 
 # Global Declaration of Column Position
 Name_Col, Rate_Col, ID_Col, Qnty_Col, Disc_prcnt_Col, Disc_Col, Price_Col = 2,3,1,4,5,6,7
 
-"""
-    GUI for Login is implemented using Tkinter
-    Rest are expected to be implemented using PyQt6
-"""
-
-#  Imports that aren't required (FOR NOW)
-
-"""
-    import UserRegistration
-    from time import sleep
-    import subprocess
-    import pyarrow
-    import pandas
-    from math import * 
-"""
+# Global Variables
 Admin = False  # Used for Authentication and permissions
-Name = str()  # Name of the
+Name = str()  # Name of the User
 logging_out = False
 Designation = None
 User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
+Bill_No = int()
 
+def cred(attr :str, parse :bool = False) -> str | None:
+    """Returns the value of the environment variable with the given name."""
+    if not parse:
+        return cred_(attr)
+    env = cred_(attr)
+    if env is not None:
+        return quote_plus(env)
+    return None
 
-def Init():
-    """
-    Should Change the Logic for checking the Network Connectivity
-
-    Should add a loading Window
-    """
-    """while not(check_Internet()):
-        messagebox.showerror("Internet Connection Error", "Please check your internet connection and try again.")
-        sleep(5)"""
+def Init() -> None:
     try:
-        global con
-        con = connect(
-            host=cred('Database_Host'),
-            database=cred('Database_Name'),
-            user=cred('Database_User'),
-            password=cred('Database_Pwd'),
-            port=cred('Database_Port'),
-        )  # Establishing Connection to the Server
-    except:
-        messagebox.showerror(
-            "Connection Error",
-            "Error connecting to the Server!!\n\nTry opening the program as Administrator",
-        )
-        exit(True)  # Exiting the Prgram when Connection to server failed
-    global cur, Admin
-    cur = con.cursor()
+        global client, db
+        url = cred("Mongo_Con_Str")
+        if url is None:
+            raise ValueError("URL")
+        client = MongoClient(eval(url))
+        db_name = cred("Mongo_DB")
+        if db_name is None:
+            raise ValueError("DB")
+        db = client[db_name]
+    except ValueError as ve:
+        reason = ve.args
+        if reason == "URL":
+            messagebox.showerror("Error", "Server Authentication Failure! Contact Admin")
+        elif reason == "DB":
+            messagebox.showerror("Error", "Database Authentication Failure! Contact Admin")
+        exit(True)
+    global Admin
     Admin = False
     Login()
-
 
 @exit_manager
 def closure() -> None:
     try:
-        if not (cur.closed):
-            con.close()
+        if not client._opened:
+            client.close()
     except:
         pass
     global Admin
     Admin = False
-
-
-def check_Internet() -> bool:
-    try:
-        request.urlopen("https://www.google.com")
-        return True
-    except:
-        # Should add offline functionality
-        return False
-
 
 def main():
     global app
@@ -104,106 +81,33 @@ def main():
     window = BMS_Home_GUI()
     exi(app.exec())
 
-
 def Bill_Number() -> Generator:
     global cur
-    cur.execute("SELECT * FROM bills ORDER BY bill_no DESC LIMIT 1")
-    Latest_Bill = cur.fetchone()
+    #cur.execute("SELECT * FROM bills ORDER BY bill_no DESC LIMIT 1")
+    Latest_Bill = None
     if Latest_Bill is None:
         Latest_Bill_No = 10000
     else:
         Latest_Bill_No = Latest_Bill[0]
     for Bill_Number in range(Latest_Bill_No + 1, 100000):
         yield Bill_Number
-
-
-Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
-Bill_No = int()
-
-
-def Auth(user: str, pwd: str) -> None:
-    """Getting Authentication Data from Server"""
-
-    cur.execute("select * from users where uid='{}'".format(user))
-    """
-import pickle
-def Init():
-    f=open("Bott.dat","wb")
-    query={1:"select {} from {} where {}={}"}
-    pickle.dump(query,f)
-    f.close()
-def Query_User():
-    f=open("Bott.dat","rb")    -> Bott.dat => Dict of queries
-    queries=pickle.load(f)
-    print(queries[1].format("*","Student Details","Last Name","N"))
-
     
-
-OUTPUT:
-
-    select * from Student Details where Last Name=N
-
-    """
-    check: tuple | None = (
-        cur.fetchone()
-    )  # Column Layout -> [(id,designation,pwd,salt_id)]
-    if check is None:
-        messagebox.showerror("Error", "User Not found!!")
-        return
-
-    """      Evaluating with respect to the obtained data               """
-
-    f = open("BillingInfo.dat", "rb+")
-    data = load(f)
-    f.close()
-    salt = data[check[3]]
-    password = hashpw(pwd.encode(), salt)
-    if str(password) == check[2]:  # Checking if the Passwords Match
-        global Designation, Name
-        Designation = check[1].title()
-        Name = check[4]
-        if Designation.casefold() == "Admin".casefold():
-            global Admin
-            Admin = True  # Setting the role as Admin if it is so
-            messagebox.showinfo(
-                title="Login Successful!", message="You are now logged in as Admin."
-            )
-        else:
-            messagebox.showinfo(
-                title="Login Successful!", message="You are now logged in."
-            )
-        global User
-        User = user
-        login_window.destroy()  # Closing the Login Window after successful Login
-        main()  # Opening Menu after Logging In
-
-    else:
-        messagebox.showerror(
-            title="Authentication Error!", message="Wrong Username or Password"
-        )  # Displaying Error if Login Failed
-
-
 def Login() -> None:
-    global login_window  # Setting the scope of 'login_window' to GLOBAL
-
-    """                     Init                    """
-
+    global login_window
+    #Initialization
     login_window = Tk()
     frame = Frame(bg="#333333")
     login_window.title("Login")
     login_window.geometry("550x600")
     login_window.configure(bg="#333333")
-    # login_window.overrideredirect(True)     #Removing Close button
-
-    """                     Widgets            """
-
+    #Widgets
     login_label = Label(frame, text="Login", font=("Helvetica", 30), bg="#333333", fg="#FF3399", pady=40)
     username_label = Label(frame, text="Username: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF")
     password_label = Label(frame, text="Password: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF")
-
+    #Inputs
     username_entry = Entry(frame, font=("Helvetica", 15))
-    password_entry = Entry(frame, show="*", font=("Helvetica", 15))  # Setting the input type to password (masking with '*')
-
+    password_entry = Entry(frame, show="*", font=("Helvetica", 15))
+    #Login_Button
     login_button = Button(
         frame,
         text="Login",
@@ -211,10 +115,16 @@ def Login() -> None:
         bg="#ffffff",
         fg="#FF3399",
     )
-
     login_window.bind("<Return>", lambda event: ValidateEntry())
-
-    def ValidateEntry():
+    #Layout
+    login_label.grid(row=0, column=0, columnspan=2, sticky="news", pady=40)
+    username_label.grid(row=1, column=0)
+    username_entry.grid(row=1, column=1, pady=20)
+    password_label.grid(row=2, column=0)
+    password_entry.grid(row=2, column=1, pady=20)
+    login_button.grid(row=3, column=0, columnspan=2, pady=30)
+    #Checking_Input
+    def ValidateEntry() -> None:
         if username_entry.get() and password_entry.get():
             login_button.invoke()
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
@@ -232,20 +142,52 @@ def Login() -> None:
                 title="Authentication Error!", 
                 message="Enter the Password!"
             )
-
-    """       Setting Layout and Displaying         """
-
-    login_label.grid(row=0, column=0, columnspan=2, sticky="news", pady=40)
-    username_label.grid(row=1, column=0)
-    username_entry.grid(row=1, column=1, pady=20)
-    password_label.grid(row=2, column=0)
-    password_entry.grid(row=2, column=1, pady=20)
-    login_button.grid(row=3, column=0, columnspan=2, pady=30)
-
-    """      Packing and Starting Mainloop     """
-
+        else: return
+    #Final
     frame.pack()
     login_window.mainloop()
+#Authentication
+def Auth(user :str, pwd :str) -> None:
+    global db
+    users_table = db['users']
+    result = users_table.find_one({'uid':user},{'uid':False})
+    if result is None:
+        messagebox.showerror(title="Authentication Error!", message="Invalid Username! Try Again!")
+        return 
+    try:
+        with open("BillingInfo.dat",'rb+') as f:
+           data = load(f)
+    except FileNotFoundError:
+        messagebox.showerror(title="Application Error", message="abms.dll is missing! Contact Admin")
+        exit(True)
+    salt = data[result['salt']]
+    password = hashpw(pwd.encode(), salt)
+    #Comparing Hashed Passwords
+    if str(password) == result['hashed_pwd']:  
+        global Designation, Name
+        Designation = result['designation'].title()
+        Name = result['name']
+        if Designation.casefold() == "Admin".casefold():
+            global Admin
+            Admin = True 
+            messagebox.showinfo(
+                title="Login Successful!", message="You are now logged in as Admin."
+            )
+        else:
+            messagebox.showinfo(
+                title="Login Successful!", message="You are now logged in."
+            )
+        global User
+        User = user
+        login_window.destroy()  # Closing the Login Window after successful Login
+        main()  
+
+    else:
+        messagebox.showerror(
+            title="Authentication Error!", message="Wrong Username or Password"
+        )
+
+Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
 
 
 class BMS_Home_GUI(QMainWindow):
@@ -310,8 +252,8 @@ class BMS_Home_GUI(QMainWindow):
             global Admin
             Admin = False
             try:
-                global con
-                con.close()
+                global client
+                client.close()
             except:
                 pass
             event.accept()
@@ -366,6 +308,7 @@ def closure():
 
     def handle_cell_change(self, row, col):
         if row is not None:
+            items_table = client['BMS']['items']
             if col == ID_Col:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
@@ -381,8 +324,7 @@ def closure():
                     ):
                         self.resetRow(row)
                 try:
-                    cur.execute("select name,sp from items where id='{}'".format(Item_ID))
-                    data = cur.fetchone()
+                    data :dict | None = items_table.find_one({'id':Item_ID},{'_id':False,'id':False})
                     if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
                         """item=QTableWidgetItem('')
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -420,7 +362,7 @@ def closure():
                                 print(f"Error! {e}")
                             pass
                         else:  # New Entry
-                            Item_Name, Item_Rate = data
+                            Item_Name, Item_Rate = data['name'],data['sp']
                             self.setBillColumn(row, Name_Col, Item_Name)  # Set item in table
                             self.setBillColumn(row, Rate_Col, Item_Rate)
                             self.setBillColumn(row, 0, row + 1)
@@ -623,17 +565,6 @@ def closure():
             exit(True)
         else:
             return
-
-
-class Profile_GUI(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        """
-        Should create a new .ui File
-
-        Also, should add  User Registration(Adding new User(with every detail) function to the Module
-        """
-        ...
 
 if __name__ == '__main__':
     Init()
