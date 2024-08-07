@@ -68,6 +68,3 @@ def authenticate(user_id: str, password: str):
 @app.route("/connected")
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False)

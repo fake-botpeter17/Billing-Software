@@ -2,6 +2,7 @@ from app import app
 from waitress import serve
 from socket import socket 
 import socket as socket_
+from os import getenv
 
 def find_open_socket(): 
     s = socket(socket_.AF_INET, socket_.SOCK_STREAM)
@@ -15,4 +16,4 @@ application = app
 if __name__ == '__main__':
     port = find_open_socket()
     print(f"Starting server on port {port} and listening on all IP")
-    serve(app=application,port=port,host='0.0.0.0')
+    serve(app=application,port=getenv('PORT',default=find_open_socket()),host='0.0.0.0')
