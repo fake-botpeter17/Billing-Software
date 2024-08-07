@@ -13,3 +13,7 @@ setup.py
 My_Icon_Resized.jpg
 My_Icon_Resized_Pro.jpg
 BMS Backup.sql
+test/*
+test.ipynb
+testt.py
+__pycache__/*
