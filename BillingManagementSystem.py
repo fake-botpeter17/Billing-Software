@@ -90,7 +90,7 @@ def Login() -> None:
     login_button = Button(
         frame,
         text="Login",
-        command=lambda: Auth(username_entry.get(), password_entry.get()),
+        command=lambda: Auth(username_entry.get(),password_entry.get()),
         bg="#ffffff",
         fg="#FF3399",
     )
@@ -103,9 +103,9 @@ def Login() -> None:
     password_entry.grid(row=2, column=1, pady=20)
     login_button.grid(row=3, column=0, columnspan=2, pady=30)
     #Checking_Input
-    def ValidateEntry() -> None:
+    def ValidateEntry() -> None | bool:
         if username_entry.get() and password_entry.get():
-            login_button.invoke()
+            return True
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
             messagebox.showerror(
                 title="Authentication Error!",
@@ -121,7 +121,6 @@ def Login() -> None:
                 title="Authentication Error!", 
                 message="Enter the Password!"
             )
-        else: return
     #Final
     frame.pack()
     login_window.mainloop()
