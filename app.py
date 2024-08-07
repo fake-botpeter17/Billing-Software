@@ -8,7 +8,6 @@ from urllib.parse import quote_plus
 app = Flask(__name__)
 
 gt = os.environ.copy()
-print("GT Dict Copied!!")
 DICT_INIT = False
 
 def Init_Dict() -> None:
@@ -18,9 +17,7 @@ def Init_Dict() -> None:
         for line in envs__:
             key, val = line.strip().split('=', maxsplit=1)
             gt[key] = val.strip()
-            print(f"Added {key}: {val.strip()}")
     DICT_INIT = True
-    print("DICT Initialized with new values!!")
 
 def cred(key: str) -> str | None:
     """Returns the value of the key from the .env file."""
@@ -64,7 +61,6 @@ def authenticate(user_id: str, password: str):
         return jsonify(f"{fe}"), 404
     salt: bytes = data[result['salt']]
     pwd: bytes = hashpw(password.encode(), salt)
-    print(pwd, result['hashed_pwd'], sep='\n')
     if pwd == result['hashed_pwd']:
         return jsonify(result), 200
     return jsonify(None)
@@ -73,9 +69,5 @@ def authenticate(user_id: str, password: str):
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
 
-@app.route("/test")
-def temp():
-    return jsonify('Success')
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=False)
