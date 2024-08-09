@@ -1,32 +1,10 @@
 from flask import Flask, jsonify
 from pymongo import MongoClient
-import os
 from pickle import load
 from bcrypt import hashpw
-from urllib.parse import quote_plus
+from os import getenv as cred
 
 app = Flask(__name__)
-
-gt = os.environ.copy()
-DICT_INIT = False
-
-def Init_Dict() -> None:
-    global DICT_INIT
-    with open("resource.env") as envs:
-        envs__ = envs.readlines()
-        for line in envs__:
-            key, val = line.strip().split('=', maxsplit=1)
-            gt[key] = val.strip()
-    DICT_INIT = True
-
-def cred(key: str) -> str | None:
-    """Returns the value of the key from the .env file."""
-    if not DICT_INIT:
-        Init_Dict()
-    return gt.get(key)
-
-# Ensure environment variables are initialized before using them
-Init_Dict()
 
 url = cred("Mongo_Con_Str")
 try:
