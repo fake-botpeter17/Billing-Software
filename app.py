@@ -65,6 +65,14 @@ def authenticate(user_id: str, password: str):
         return jsonify(result), 200
     return jsonify(None)
 
+@app.route("//get_items")
+def get_items():
+    res = items_table.find({}, {'_id': False, 'added': False, 'cp': False, 'qnty': False})
+    items = []
+    for item in res:
+        items.append(item)
+    return jsonify(items)
+
 @app.route("/connected")
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
