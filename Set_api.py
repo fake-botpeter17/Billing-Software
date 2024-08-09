@@ -13,5 +13,15 @@ def view_API():
         return load(file).decode("utf-32")
     
 if __name__ == '__main__':
-    print(view_API())
-    #Set_api()
+    ch =1
+    while ch!=3:
+        ch = int(input("What do you want to do?\n\t1. Set new API Key\n\t2. View current API Key\n\t3. Exit\nYour Choice:\t"))
+        match(ch):
+            case 1:
+                Set_api()
+            case 2:
+                print(view_API())
+            case 3:
+                print("Exiting...")
+            case _:
+                print("Invalid choice!!")
