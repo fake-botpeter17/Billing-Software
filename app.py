@@ -61,7 +61,7 @@ def authenticate(user_id: str, password: str):
         return jsonify(f"{fe}"), 404
     salt: bytes = data[result['salt']]
     pwd: bytes = hashpw(password.encode(), salt)
-    if pwd == result['hashed_pwd']:
+    if str(pwd) == result['hashed_pwd']:
         return jsonify(result), 200
     return jsonify(None)
 
