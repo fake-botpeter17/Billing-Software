@@ -1,4 +1,5 @@
 # Imports
+import string
 from tkinter.filedialog import askopenfilename
 from typing import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
@@ -21,7 +22,7 @@ from atexit import register as exit_manager
 
 # Global Declaration of Column Position
 Name_Col, Rate_Col, ID_Col, Qnty_Col, Disc_prcnt_Col, Disc_Col, Price_Col = 2,3,1,4,5,6,7
-
+punc = string.punctuation
 # Global Variables
 Admin = False  # Used for Authentication and permissions
 Name = str()  # Name of the User
@@ -106,8 +107,18 @@ def Login() -> None:
     def ValidateEntry():
         if ValidateEntry_():
             Auth(username_entry.get(),password_entry.get())
+    def ValidInp(val,usr: bool = False):
+        if usr:
+            return username_entry.get().isalpha()
+        else:
+            pw :str= password_entry.get()
+            intersect = set(pw).intersection(punc)
+            if len(intersect)==0 or (len(intersect) == 1 and {'_'} == intersect):
+                return True
+            return False
+    
     def ValidateEntry_() -> None | bool:
-        if username_entry.get() and password_entry.get():
+        if ValidInp(username_entry.get(),usr=True) and ValidInp(password_entry.get()):
             return True
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
             messagebox.showerror(
@@ -124,12 +135,19 @@ def Login() -> None:
                 title="Authentication Error!", 
                 message="Enter the Password!"
             )
+        else:
+            messagebox.showerror(
+                title="Authentication Error!",
+                message="Username or Password must contain only letters and numbers!"
+            )
     #Final
     frame.pack()
     login_window.mainloop()
 #Authentication
 def Auth(user :str, pwd :str) -> None:
-    req = Request(f"{url}//authenticate//{user}//{pwd}")
+    URL = f"{url}//authenticate//{user}//{pwd}"
+    print(URL)
+    req = Request(URL)
     response_ =  urlopen(req)
     response = response_.read().decode()
     result = loads(response)
