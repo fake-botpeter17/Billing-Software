@@ -90,7 +90,7 @@ def Login() -> None:
     login_button = Button(
         frame,
         text="Login",
-        command=lambda: Auth(username_entry.get(),password_entry.get()),
+        command=lambda: ValidateEntry(),
         bg="#ffffff",
         fg="#FF3399",
     )
@@ -103,7 +103,10 @@ def Login() -> None:
     password_entry.grid(row=2, column=1, pady=20)
     login_button.grid(row=3, column=0, columnspan=2, pady=30)
     #Checking_Input
-    def ValidateEntry() -> None | bool:
+    def ValidateEntry():
+        if ValidateEntry_():
+            Auth(username_entry.get(),password_entry.get())
+    def ValidateEntry_() -> None | bool:
         if username_entry.get() and password_entry.get():
             return True
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
