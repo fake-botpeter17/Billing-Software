@@ -1,5 +1,6 @@
 # Imports
 import string
+import asyncio
 from tkinter.filedialog import askopenfilename
 from typing import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
@@ -31,6 +32,7 @@ Designation = None
 User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
+items_cache = {}  
 
 def get_Api() -> str:
     """Returns the API URL for the server"""
@@ -55,7 +57,19 @@ def Init() -> None:
     Admin = False
     Login()
 
+async def Items_Cacher():
+    print("Async started")
+    global items_cache
+    req = Request(url+'//get_items')
+    with urlopen(req,timeout=15) as response:
+        items_cache_ = loads(response.read().decode())
+    for item in items_cache_:
+        items_cache[item['id']] = item
+    print(items_cache)
+
 def main():
+    asyncio.run(Items_Cacher())
+    print("next linee")
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
@@ -115,6 +129,9 @@ def Login() -> None:
             intersect = set(pw).intersection(punc)
             if len(intersect)==0 or (len(intersect) == 1 and {'_'} == intersect):
                 return True
+            elif len(intersect)<3:
+                if '_' in intersect and '@' in intersect:
+                    return True
             return False
     
     def ValidateEntry_() -> None | bool:
@@ -146,12 +163,10 @@ def Login() -> None:
 #Authentication
 def Auth(user :str, pwd :str) -> None:
     URL = f"{url}//authenticate//{user}//{pwd}"
-    print(URL)
     req = Request(URL)
     response_ =  urlopen(req)
     response = response_.read().decode()
     result = loads(response)
-    print(result,response)
     #Comparing Hashed Passwords
     if result is not None:  
         global Designation, Name
@@ -170,8 +185,7 @@ def Auth(user :str, pwd :str) -> None:
         global User
         User = user
         login_window.destroy()  # Closing the Login Window after successful Login
-        main()  
-
+        main()
     else:
         messagebox.showerror(
             title="Authentication Error!", message="Wrong Username or Password"
@@ -308,10 +322,13 @@ def closure():
                     ):
                         self.resetRow(row)
                 try:
-                    req = Request(f"{url}//items//{Item_ID}")
-                    response = urlopen(req)
-                    data = response.read().decode("utf-8")
-                    data = loads(data)
+                    if Item_ID not in items_cache:
+                        req = Request(f"{url}//items//{Item_ID}")
+                        response = urlopen(req)
+                        data = response.read().decode("utf-8")
+                        data = loads(data)
+                    else:
+                        data = items_cache[Item_ID]
                     if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
                         """item=QTableWidgetItem('')
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
