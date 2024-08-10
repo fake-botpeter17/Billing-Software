@@ -58,18 +58,15 @@ def Init() -> None:
     Login()
 
 async def Items_Cacher():
-    print("Async started")
     global items_cache
     req = Request(url+'//get_items')
     with urlopen(req,timeout=15) as response:
         items_cache_ = loads(response.read().decode())
     for item in items_cache_:
         items_cache[item['id']] = item
-    print(items_cache)
 
 def main():
     asyncio.run(Items_Cacher())
-    print("next linee")
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
@@ -127,7 +124,7 @@ def Login() -> None:
         else:
             pw :str= password_entry.get()
             intersect = set(pw).intersection(punc)
-            if len(intersect)==0 or (len(intersect) == 1 and {'_'} == intersect):
+            if len(intersect)==0 or (len(intersect) == 1 and ({'_'} == intersect or {'@'} == intersect)): 
                 return True
             elif len(intersect)<3:
                 if '_' in intersect and '@' in intersect:
@@ -321,6 +318,11 @@ def closure():
                         or self.Bill_Table.item(row, ID_Col).text()== None  # type:ignore
                     ):
                         self.resetRow(row)
+                        tmp :list= list(bill_data.values())
+                        if tmp is not None:
+                            if row in tmp:
+                                ind = tmp.index(row)
+                                del bill_data[list(bill_data.keys())[ind]]  # type:ignore
                 try:
                     if Item_ID not in items_cache:
                         req = Request(f"{url}//items//{Item_ID}")
@@ -330,18 +332,10 @@ def closure():
                     else:
                         data = items_cache[Item_ID]
                     if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
-                        """item=QTableWidgetItem('')
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Name_Col,item)
-                        item=QTableWidgetItem('')
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Rate_Col,item)"""
-                        item_id = self.getText(row, ID_Col)
-                        """if bill_data[item_id]==row:
-                            self.setBillColumn(row,Qnty_Col, int(self.getText(row,Qnty_Col))+1)
-                            discount = self.getText(row,Disc_prcnt_Col)
-                            """
-                        if bill_data[item_id] != row:
+                        KEY_PRESENT = True
+                        if bill_data.get(Item_ID,None) is None:
+                            KEY_PRESENT = False
+                        if not KEY_PRESENT:       #
                             self.setBillColumn(row, Qnty_Col, 1)
                             self.setBillColumn(row, Disc_prcnt_Col, 0)
                             self.setBillColumn(row, Disc_Col, 0)
@@ -350,18 +344,25 @@ def closure():
                                 if bill_data[key] == row:
                                     break
                             bill_data.pop(key, None)
+                            self.setCellTracking(True)
+                            self.handle_cell_change(row,col)
+                            return
 
                     if data is not None:
                         if Item_ID in bill_data.keys():  # Deals with duplicate entries
                             self.setBillColumn(row, ID_Col)
+                            self.setBillColumn(row, 0)
                             row = bill_data[Item_ID]
                             qnty = int(self.getText(row, Qnty_Col))
                             self.setBillColumn(row, Qnty_Col, str(qnty + 1))
                             try:
                                 Quantity = int(self.getText(row, Qnty_Col))
                                 Rate = int(self.getText(row, Rate_Col))
+                                Disc_Prc = float(self.getText(row,Disc_prcnt_Col))
                                 Price = Quantity * Rate
-                                self.setBillColumn(row, Price_Col, Price)
+                                disc_amt = Price * Disc_Prc / 100
+                                self.setBillColumn(row, Price_Col, round(Price-disc_amt,2))
+                                self.setBillColumn(row,Disc_Col,round(disc_amt,2))
                             except Exception as e:
                                 print(f"Error! {e}")
                             pass
