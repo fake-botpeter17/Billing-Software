@@ -17,9 +17,7 @@ from PyQt6.QtCore import Qt
 from urllib.request import Request, urlopen
 from json import loads
 from datetime import datetime, date
-from os import getenv as cred_
 from sys import exit as exi
-from atexit import register as exit_manager
 
 # Global Declaration of Column Position
 Name_Col, Rate_Col, ID_Col, Qnty_Col, Disc_prcnt_Col, Disc_Col, Price_Col = 2,3,1,4,5,6,7
@@ -73,13 +71,12 @@ def main():
     exi(app.exec())
 
 def Bill_Number() -> Generator:
-    global cur
-    #cur.execute("SELECT * FROM bills ORDER BY bill_no DESC LIMIT 1")
+    #Get latest Bill No and save it to the below Variable
     Latest_Bill = None
     if Latest_Bill is None:
         Latest_Bill_No = 10000
     else:
-        Latest_Bill_No = Latest_Bill[0]
+        Latest_Bill_No = Latest_Bill
     for Bill_Number in range(Latest_Bill_No + 1, 100000):
         yield Bill_Number
     
@@ -529,18 +526,6 @@ def closure():
             Should add bill(text) content after determining the Paper size
             """
         ...
-        cur.execute(
-            "insert into bills values ({},'{}',{},'{}')".format(
-                Bill_No, (date.today().strftime("%d %B, %Y")), total, User
-            )
-        )
-        con.commit()
-        global bill_data
-        for key in bill_data.keys():
-            self.setBillColumn(bill_data[key], ID_Col, "")
-        Bill_No = next(Bill_No_Gen)
-        bill_data = (dict())  # reinitializing the item data stored and hence resetting the Table
-        self.setup()
 
     def logout(self):
         confirmation_dialog = QMessageBox(self)
