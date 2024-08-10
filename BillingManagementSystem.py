@@ -1,8 +1,8 @@
 # Imports
+import string
+import asyncio
 from tkinter.filedialog import askopenfilename
 from typing import Generator
-from pymongo import MongoClient
-from urllib.parse import quote_plus
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QTableWidget,
@@ -14,17 +14,16 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
-from bcrypt import hashpw
-from pickle import load
+from urllib.request import Request, urlopen
+from json import loads
 from datetime import datetime, date
-from urllib import request
 from os import getenv as cred_
 from sys import exit as exi
 from atexit import register as exit_manager
 
 # Global Declaration of Column Position
 Name_Col, Rate_Col, ID_Col, Qnty_Col, Disc_prcnt_Col, Disc_Col, Price_Col = 2,3,1,4,5,6,7
-
+punc = string.punctuation
 # Global Variables
 Admin = False  # Used for Authentication and permissions
 Name = str()  # Name of the User
@@ -33,49 +32,41 @@ Designation = None
 User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
+items_cache = {}  
 
-def cred(attr :str, parse :bool = False) -> str | None:
-    """Returns the value of the environment variable with the given name."""
-    if not parse:
-        return cred_(attr)
-    env = cred_(attr)
-    if env is not None:
-        return quote_plus(env)
-    return None
+def get_Api() -> str:
+    """Returns the API URL for the server"""
+    from pickle import load
+    with open("Resources\\sak.dat", 'rb') as file:
+        return load(file).decode("utf-32")
+    
+url = get_Api()
 
 def Init() -> None:
     try:
-        global client, db
-        url = cred("Mongo_Con_Str")
-        if url is None:
-            raise ValueError("URL")
-        client = MongoClient(eval(url))
-        db_name = cred("Mongo_DB")
-        if db_name is None:
-            raise ValueError("DB")
-        db = client[db_name]
-    except ValueError as ve:
-        reason = ve.args
-        if reason == "URL":
-            messagebox.showerror("Error", "Server Authentication Failure! Contact Admin")
-        elif reason == "DB":
-            messagebox.showerror("Error", "Database Authentication Failure! Contact Admin")
+        if_connected_req = Request(f"{url}//connected")
+        with urlopen(if_connected_req) as responsee:
+            if loads(responsee.read().decode("utf-8")):
+                messagebox.showinfo("Success!", "Connected to the server successfully")
+            else:
+                messagebox.showerror("Error!", "Failed to connect to the server")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error: {e}")
         exit(True)
     global Admin
     Admin = False
     Login()
 
-@exit_manager
-def closure() -> None:
-    try:
-        if not client._opened:
-            client.close()
-    except:
-        pass
-    global Admin
-    Admin = False
+async def Items_Cacher():
+    global items_cache
+    req = Request(url+'//get_items')
+    with urlopen(req,timeout=15) as response:
+        items_cache_ = loads(response.read().decode())
+    for item in items_cache_:
+        items_cache[item['id']] = item
 
 def main():
+    asyncio.run(Items_Cacher())
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
@@ -111,7 +102,7 @@ def Login() -> None:
     login_button = Button(
         frame,
         text="Login",
-        command=lambda: Auth(username_entry.get(), password_entry.get()),
+        command=lambda: ValidateEntry(),
         bg="#ffffff",
         fg="#FF3399",
     )
@@ -124,9 +115,25 @@ def Login() -> None:
     password_entry.grid(row=2, column=1, pady=20)
     login_button.grid(row=3, column=0, columnspan=2, pady=30)
     #Checking_Input
-    def ValidateEntry() -> None:
-        if username_entry.get() and password_entry.get():
-            login_button.invoke()
+    def ValidateEntry():
+        if ValidateEntry_():
+            Auth(username_entry.get(),password_entry.get())
+    def ValidInp(val,usr: bool = False):
+        if usr:
+            return username_entry.get().isalpha()
+        else:
+            pw :str= password_entry.get()
+            intersect = set(pw).intersection(punc)
+            if len(intersect)==0 or (len(intersect) == 1 and ({'_'} == intersect or {'@'} == intersect)): 
+                return True
+            elif len(intersect)<3:
+                if '_' in intersect and '@' in intersect:
+                    return True
+            return False
+    
+    def ValidateEntry_() -> None | bool:
+        if ValidInp(username_entry.get(),usr=True) and ValidInp(password_entry.get()):
+            return True
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
             messagebox.showerror(
                 title="Authentication Error!",
@@ -142,28 +149,23 @@ def Login() -> None:
                 title="Authentication Error!", 
                 message="Enter the Password!"
             )
-        else: return
+        else:
+            messagebox.showerror(
+                title="Authentication Error!",
+                message="Username or Password must contain only letters and numbers!"
+            )
     #Final
     frame.pack()
     login_window.mainloop()
 #Authentication
 def Auth(user :str, pwd :str) -> None:
-    global db
-    users_table = db['users']
-    result = users_table.find_one({'uid':user},{'uid':False})
-    if result is None:
-        messagebox.showerror(title="Authentication Error!", message="Invalid Username! Try Again!")
-        return 
-    try:
-        with open("BillingInfo.dat",'rb+') as f:
-           data = load(f)
-    except FileNotFoundError:
-        messagebox.showerror(title="Application Error", message="abms.dll is missing! Contact Admin")
-        exit(True)
-    salt = data[result['salt']]
-    password = hashpw(pwd.encode(), salt)
+    URL = f"{url}//authenticate//{user}//{pwd}"
+    req = Request(URL)
+    response_ =  urlopen(req)
+    response = response_.read().decode()
+    result = loads(response)
     #Comparing Hashed Passwords
-    if str(password) == result['hashed_pwd']:  
+    if result is not None:  
         global Designation, Name
         Designation = result['designation'].title()
         Name = result['name']
@@ -180,8 +182,7 @@ def Auth(user :str, pwd :str) -> None:
         global User
         User = user
         login_window.destroy()  # Closing the Login Window after successful Login
-        main()  
-
+        main()
     else:
         messagebox.showerror(
             title="Authentication Error!", message="Wrong Username or Password"
@@ -251,11 +252,6 @@ class BMS_Home_GUI(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             global Admin
             Admin = False
-            try:
-                global client
-                client.close()
-            except:
-                pass
             event.accept()
         else:
             event.ignore()
@@ -308,7 +304,6 @@ def closure():
 
     def handle_cell_change(self, row, col):
         if row is not None:
-            items_table = client['BMS']['items']
             if col == ID_Col:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
@@ -323,21 +318,24 @@ def closure():
                         or self.Bill_Table.item(row, ID_Col).text()== None  # type:ignore
                     ):
                         self.resetRow(row)
+                        tmp :list= list(bill_data.values())
+                        if tmp is not None:
+                            if row in tmp:
+                                ind = tmp.index(row)
+                                del bill_data[list(bill_data.keys())[ind]]  # type:ignore
                 try:
-                    data :dict | None = items_table.find_one({'id':Item_ID},{'_id':False,'id':False})
+                    if Item_ID not in items_cache:
+                        req = Request(f"{url}//items//{Item_ID}")
+                        response = urlopen(req)
+                        data = response.read().decode("utf-8")
+                        data = loads(data)
+                    else:
+                        data = items_cache[Item_ID]
                     if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
-                        """item=QTableWidgetItem('')
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Name_Col,item)
-                        item=QTableWidgetItem('')
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        self.Bill_Table.setItem(row,Rate_Col,item)"""
-                        item_id = self.getText(row, ID_Col)
-                        """if bill_data[item_id]==row:
-                            self.setBillColumn(row,Qnty_Col, int(self.getText(row,Qnty_Col))+1)
-                            discount = self.getText(row,Disc_prcnt_Col)
-                            """
-                        if bill_data[item_id] != row:
+                        KEY_PRESENT = True
+                        if bill_data.get(Item_ID,None) is None:
+                            KEY_PRESENT = False
+                        if not KEY_PRESENT:       #
                             self.setBillColumn(row, Qnty_Col, 1)
                             self.setBillColumn(row, Disc_prcnt_Col, 0)
                             self.setBillColumn(row, Disc_Col, 0)
@@ -346,18 +344,25 @@ def closure():
                                 if bill_data[key] == row:
                                     break
                             bill_data.pop(key, None)
+                            self.setCellTracking(True)
+                            self.handle_cell_change(row,col)
+                            return
 
                     if data is not None:
                         if Item_ID in bill_data.keys():  # Deals with duplicate entries
                             self.setBillColumn(row, ID_Col)
+                            self.setBillColumn(row, 0)
                             row = bill_data[Item_ID]
                             qnty = int(self.getText(row, Qnty_Col))
                             self.setBillColumn(row, Qnty_Col, str(qnty + 1))
                             try:
                                 Quantity = int(self.getText(row, Qnty_Col))
                                 Rate = int(self.getText(row, Rate_Col))
+                                Disc_Prc = float(self.getText(row,Disc_prcnt_Col))
                                 Price = Quantity * Rate
-                                self.setBillColumn(row, Price_Col, Price)
+                                disc_amt = Price * Disc_Prc / 100
+                                self.setBillColumn(row, Price_Col, round(Price-disc_amt,2))
+                                self.setBillColumn(row,Disc_Col,round(disc_amt,2))
                             except Exception as e:
                                 print(f"Error! {e}")
                             pass
