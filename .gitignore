@@ -17,3 +17,10 @@ test/*
 __pycache__/*
 test.ipynb
 testt.py
+Resources/*
+Barcodes/*
+Barcode.py
+Batch1.pdf
+labels.pdf
+MRP_Labels.pdf
+queryFormat.py

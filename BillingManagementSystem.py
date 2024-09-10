@@ -1,6 +1,7 @@
 # Imports
 import string
 import asyncio
+from pyautogui import press, typewrite
 from tkinter.filedialog import askopenfilename
 from typing import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
@@ -30,15 +31,19 @@ Designation = None
 User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
-items_cache = {}  
+items_cache = {}
+
 
 def get_Api() -> str:
     """Returns the API URL for the server"""
     from pickle import load
-    with open("Resources\\sak.dat", 'rb') as file:
+
+    with open("Resources\\sak.dat", "rb") as file:
         return load(file).decode("utf-32")
-    
+
+
 url = get_Api()
+
 
 def Init() -> None:
     try:
@@ -55,13 +60,15 @@ def Init() -> None:
     Admin = False
     Login()
 
+
 async def Items_Cacher():
     global items_cache
-    req = Request(url+'//get_items')
-    with urlopen(req,timeout=15) as response:
+    req = Request(url + "//get_items")
+    with urlopen(req, timeout=15) as response:
         items_cache_ = loads(response.read().decode())
     for item in items_cache_:
-        items_cache[item['id']] = item
+        items_cache[item["id"]] = item
+
 
 def main():
     asyncio.run(Items_Cacher())
@@ -70,8 +77,9 @@ def main():
     window = BMS_Home_GUI()
     exi(app.exec())
 
+
 def Bill_Number() -> Generator:
-    #Get latest Bill No and save it to the below Variable
+    # Get latest Bill No and save it to the below Variable
     Latest_Bill = None
     if Latest_Bill is None:
         Latest_Bill_No = 10000
@@ -79,23 +87,30 @@ def Bill_Number() -> Generator:
         Latest_Bill_No = Latest_Bill
     for Bill_Number in range(Latest_Bill_No + 1, 100000):
         yield Bill_Number
-    
+
+
 def Login() -> None:
     global login_window
-    #Initialization
+    # Initialization
     login_window = Tk()
     frame = Frame(bg="#333333")
     login_window.title("Login")
     login_window.geometry("550x600")
     login_window.configure(bg="#333333")
-    #Widgets
-    login_label = Label(frame, text="Login", font=("Helvetica", 30), bg="#333333", fg="#FF3399", pady=40)
-    username_label = Label(frame, text="Username: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF")
-    password_label = Label(frame, text="Password: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF")
-    #Inputs
+    # Widgets
+    login_label = Label(
+        frame, text="Login", font=("Helvetica", 30), bg="#333333", fg="#FF3399", pady=40
+    )
+    username_label = Label(
+        frame, text="Username: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF"
+    )
+    password_label = Label(
+        frame, text="Password: ", font=("Helvetica", 15), bg="#333333", fg="#FFFFFF"
+    )
+    # Inputs
     username_entry = Entry(frame, font=("Helvetica", 15))
     password_entry = Entry(frame, show="*", font=("Helvetica", 15))
-    #Login_Button
+    # Login_Button
     login_button = Button(
         frame,
         text="Login",
@@ -104,32 +119,36 @@ def Login() -> None:
         fg="#FF3399",
     )
     login_window.bind("<Return>", lambda event: ValidateEntry())
-    #Layout
+    # Layout
     login_label.grid(row=0, column=0, columnspan=2, sticky="news", pady=40)
     username_label.grid(row=1, column=0)
     username_entry.grid(row=1, column=1, pady=20)
     password_label.grid(row=2, column=0)
     password_entry.grid(row=2, column=1, pady=20)
     login_button.grid(row=3, column=0, columnspan=2, pady=30)
-    #Checking_Input
+
+    # Checking_Input
     def ValidateEntry():
         if ValidateEntry_():
-            Auth(username_entry.get(),password_entry.get())
-    def ValidInp(val,usr: bool = False):
+            Auth(username_entry.get(), password_entry.get())
+
+    def ValidInp(val, usr: bool = False):
         if usr:
             return username_entry.get().isalpha()
         else:
-            pw :str= password_entry.get()
+            pw: str = password_entry.get()
             intersect = set(pw).intersection(punc)
-            if len(intersect)==0 or (len(intersect) == 1 and ({'_'} == intersect or {'@'} == intersect)): 
+            if len(intersect) == 0 or (
+                len(intersect) == 1 and ({"_"} == intersect or {"@"} == intersect)
+            ):
                 return True
-            elif len(intersect)<3:
-                if '_' in intersect and '@' in intersect:
+            elif len(intersect) < 3:
+                if "_" in intersect and "@" in intersect:
                     return True
             return False
-    
+
     def ValidateEntry_() -> None | bool:
-        if ValidInp(username_entry.get(),usr=True) and ValidInp(password_entry.get()):
+        if ValidInp(username_entry.get(), usr=True) and ValidInp(password_entry.get()):
             return True
         elif (len(username_entry.get()) == 0) and (len(password_entry.get()) == 0):
             messagebox.showerror(
@@ -138,37 +157,38 @@ def Login() -> None:
             )
         elif len(username_entry.get()) == 0:
             messagebox.showerror(
-                title="Authentication Error!", 
-                message="Enter the Username!"
+                title="Authentication Error!", message="Enter the Username!"
             )
         elif len(password_entry.get()) == 0:
             messagebox.showerror(
-                title="Authentication Error!", 
-                message="Enter the Password!"
+                title="Authentication Error!", message="Enter the Password!"
             )
         else:
             messagebox.showerror(
                 title="Authentication Error!",
-                message="Username or Password must contain only letters and numbers!"
+                message="Username or Password must contain only letters and numbers!",
             )
-    #Final
+
+    # Final
     frame.pack()
     login_window.mainloop()
-#Authentication
-def Auth(user :str, pwd :str) -> None:
+
+
+# Authentication
+def Auth(user: str, pwd: str) -> None:
     URL = f"{url}//authenticate//{user}//{pwd}"
     req = Request(URL)
-    response_ =  urlopen(req)
+    response_ = urlopen(req)
     response = response_.read().decode()
     result = loads(response)
-    #Comparing Hashed Passwords
-    if result is not None:  
+    # Comparing Hashed Passwords
+    if result is not None:
         global Designation, Name
-        Designation = result['designation'].title()
-        Name = result['name']
+        Designation = result["designation"].title()
+        Name = result["name"]
         if Designation.casefold() == "Admin".casefold():
             global Admin
-            Admin = True 
+            Admin = True
             messagebox.showinfo(
                 title="Login Successful!", message="You are now logged in as Admin."
             )
@@ -210,17 +230,28 @@ class BMS_Home_GUI(QMainWindow):
             self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit # type:ignore
         self.show()
         self.setup()
+        press("tab")
 
     def setup(self):
         global Bill_No
         self.setTheme("Qt resources//Theme//Default.qss")
-        self.Bill_Number_Label.setText("Bill No    : {}".format((Bill_No)))  # type:ignore
-        self.Bill_Date_Label.setText("Bill Date : {}".format(date.today().strftime("%B %d, %Y")))  # type:ignore
-        self.Billed_By_Label.setText("Billed By : {} ({})".format(Name, Designation))  # type:ignore
-        self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))# type:ignore
+        self.Bill_Number_Label.setText(# type:ignore
+            "Bill No    : {}".format((Bill_No))
+        )  
+        self.Bill_Date_Label.setText(# type:ignore
+            "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
+        )  
+        self.Billed_By_Label.setText(# type:ignore
+            "Billed By : {} ({})".format(Name, Designation)
+        )  
+        self.Bill_Time_Label.setText(# type:ignore
+            "Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")) 
+        ) 
         self.actionLogout.triggered.connect(lambda: self.logout())  # type:ignore
         self.actionThemes.triggered.connect(lambda: self.setTheme())  # type:ignore
-        self.Profile.triggered.connect(lambda: Profile_(User)) # Should Change after defining Profile GUI  
+        self.Profile.triggered.connect( # type:ignore
+            lambda: Profile_(User)# type:ignore
+        )  # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)  # type:ignore
         self.Bill_Table.setRowCount(26)  # type:ignore
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
@@ -301,6 +332,7 @@ def closure():
 
     def handle_cell_change(self, row, col):
         if row is not None:
+            global bill_data
             if col == ID_Col:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
@@ -308,31 +340,36 @@ def closure():
                     Item_ID = int(s)
                     del s
                     if Item_ID not in bill_data:
+                        try:
+                            self.setCellTracking(False)
+                        except:
+                            pass
                         self.setBillColumn(row, ID_Col, Item_ID)
                 except:  # Convertion Error (str -> int)
                     if (
                         self.Bill_Table.item(row, ID_Col).text() == ""  # type:ignore
-                        or self.Bill_Table.item(row, ID_Col).text()== None  # type:ignore
+                        or self.Bill_Table.item(row, ID_Col).text()         # type:ignore
+                        == None  
                     ):
                         self.resetRow(row)
-                        tmp :list= list(bill_data.values())
+                        tmp: list = list(bill_data.values())
                         if tmp is not None:
                             if row in tmp:
                                 ind = tmp.index(row)
-                                del bill_data[list(bill_data.keys())[ind]]  # type:ignore
+                                del bill_data[
+                                    list(bill_data.keys())[ind]
+                                ]  # type:ignore
+                                self.CalcTotal()
+
                 try:
-                    if Item_ID not in items_cache:
-                        req = Request(f"{url}//items//{Item_ID}")
-                        response = urlopen(req)
-                        data = response.read().decode("utf-8")
-                        data = loads(data)
-                    else:
-                        data = items_cache[Item_ID]
-                    if (row in bill_data.values()):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
-                        KEY_PRESENT = True
-                        if bill_data.get(Item_ID,None) is None:
+                    data = items_cache.get(Item_ID)
+                    if (
+                        row in bill_data.values()
+                    ):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
+                        KEY_PRESENT = True  # If duplicate?
+                        if bill_data.get(Item_ID, None) is None:
                             KEY_PRESENT = False
-                        if not KEY_PRESENT:       #
+                        if not KEY_PRESENT:  #
                             self.setBillColumn(row, Qnty_Col, 1)
                             self.setBillColumn(row, Disc_prcnt_Col, 0)
                             self.setBillColumn(row, Disc_Col, 0)
@@ -342,30 +379,41 @@ def closure():
                                     break
                             bill_data.pop(key, None)
                             self.setCellTracking(True)
-                            self.handle_cell_change(row,col)
+                            self.handle_cell_change(row, col)
                             return
 
                     if data is not None:
                         if Item_ID in bill_data.keys():  # Deals with duplicate entries
-                            self.setBillColumn(row, ID_Col)
-                            self.setBillColumn(row, 0)
+                            try:
+                                self.setCellTracking(False)
+                            except:
+                                pass
+                            if row != bill_data[Item_ID]:
+                                self.setBillColumn(row, ID_Col)
+                                self.setBillColumn(row, 0)
                             row = bill_data[Item_ID]
                             qnty = int(self.getText(row, Qnty_Col))
                             self.setBillColumn(row, Qnty_Col, str(qnty + 1))
                             try:
                                 Quantity = int(self.getText(row, Qnty_Col))
                                 Rate = int(self.getText(row, Rate_Col))
-                                Disc_Prc = float(self.getText(row,Disc_prcnt_Col))
+                                Disc_Prc = float(self.getText(row, Disc_prcnt_Col))
                                 Price = Quantity * Rate
                                 disc_amt = Price * Disc_Prc / 100
-                                self.setBillColumn(row, Price_Col, round(Price-disc_amt,2))
-                                self.setBillColumn(row,Disc_Col,round(disc_amt,2))
+                                self.setBillColumn(
+                                    row, Price_Col, round(Price - disc_amt, 2)
+                                )
+                                self.setBillColumn(row, Disc_Col, round(disc_amt, 2))
                             except Exception as e:
                                 print(f"Error! {e}")
-                            pass
+
+                            finally:
+                                self.setCellTracking(True)
                         else:  # New Entry
-                            Item_Name, Item_Rate = data['name'],data['sp']
-                            self.setBillColumn(row, Name_Col, Item_Name)  # Set item in table
+                            Item_Name, Item_Rate = data["name"], data["sp"]
+                            self.setBillColumn(
+                                row, Name_Col, Item_Name
+                            )  # Set item in table
                             self.setBillColumn(row, Rate_Col, Item_Rate)
                             self.setBillColumn(row, 0, row + 1)
                             self.setBillColumn(row, Disc_prcnt_Col, 0)
@@ -373,17 +421,19 @@ def closure():
                             self.setBillColumn(row, Qnty_Col, 1)
                             self.setBillColumn(row, Price_Col, Item_Rate)
                             bill_data[Item_ID] = row
+                            press("down")
                     else:  # If data from db is NONE  => New data (Custom)
-                        if (Item_ID in bill_data.keys()):  # Checking for duplicate entry(if duplicate...)
+                        if (
+                            Item_ID in bill_data.keys()
+                        ):  # Checking for duplicate entry(if duplicate...)
                             self.setBillColumn(row, ID_Col)
                             row = bill_data[Item_ID]
                             qnty = int(self.getText(row, Qnty_Col))
                             self.setBillColumn(row, Qnty_Col, qnty + 1)
                             try:
-                                Quantity = int(self.getText(row, Qnty_Col))
                                 Rate = int(self.getText(row, Rate_Col))
                                 dis = float(self.getText(row, Disc_prcnt_Col))
-                                p = Quantity * Rate
+                                p = (qnty + 1) * Rate
                                 Price = p * (1 - (dis / 100))
                                 self.setBillColumn(row, Disc_Col, p - Price)
                                 self.setBillColumn(row, Price_Col, Price)
@@ -396,6 +446,7 @@ def closure():
                             self.setBillColumn(row, Disc_prcnt_Col, 0)
                             self.setBillColumn(row, Qnty_Col, 1)
                             bill_data[Item_ID] = row
+                            press("right")
                 except:
                     pass
                 self.setCellTracking(True)
@@ -416,7 +467,10 @@ def closure():
                         Net_Price = Price - Discount
                         self.setBillColumn(row, Price_Col, Net_Price)
                         Discount_prct = Discount * 100 / Net_Price
-                        self.setBillColumn(row, Disc_prcnt_Col, round(Discount_prct, 2))  # Should be verifiedd
+                        self.setBillColumn(
+                            row, Disc_prcnt_Col, round(Discount_prct, 2)
+                        )  # Should be verifiedd
+                    press(["down"] + ["left"] * 3)
                     self.setCellTracking(True)
                 except:
                     pass
@@ -456,7 +510,7 @@ def closure():
                     Price = Quantity * Rate
                     Discount = int(self.getText(row, Disc_prcnt_Col))
                     Disc_Price = Price * Discount / 100
-                    self.setBillColumn(row,Rate_Col,Rate)
+                    self.setBillColumn(row, Rate_Col, Rate)
                     self.setBillColumn(row, Disc_Col, round(Disc_Price, 2))
                     self.setBillColumn(row, Price_Col, round((Price - Disc_Price), 2))
                     self.setCellTracking(True)
@@ -466,18 +520,18 @@ def closure():
                         pass
                     except:
                         pass
-            elif col == Name_Col:   #Change in Name column
+            elif col == Name_Col:  # Change in Name column
                 try:
                     self.setCellTracking(False)
-                    name = self.getText(row,Name_Col)
-                    self.setBillColumn(row,Name_Col,name)
-                    self.setBillColumn(row,0,row+1)
-                    if self.getText(row,Price_Col) in [None, ""]:
+                    name = self.getText(row, Name_Col)
+                    self.setBillColumn(row, Name_Col, name)
+                    self.setBillColumn(row, 0, row + 1)
+                    if self.getText(row, Price_Col) in [None, ""]:
                         self.setBillColumn(row, Price_Col, 0)
                         self.setBillColumn(row, Disc_Col, 0)
                         self.setBillColumn(row, Disc_prcnt_Col, 0)
-                    if self.getText(row,Qnty_Col) in [None, ""]:
-                        self.setBillColumn(row,Qnty_Col,1)
+                    if self.getText(row, Qnty_Col) in [None, ""]:
+                        self.setBillColumn(row, Qnty_Col, 1)
                 except:
                     pass
                 try:
@@ -485,27 +539,9 @@ def closure():
                 except:
                     pass
 
-            global total
-            net_total = int()
-            total = float()
-            discount = float()
             try:  # Net Totals and discounts calculation
-                for key in bill_data.keys():
-                    self.setCellTracking(False)
-                    try:
-                        total += float((self.getText(bill_data[key], Price_Col)))
-                    except:
-                        pass
-                    try:
-                        discount += float(self.getText(bill_data[key], Disc_Col))
-                    except:
-                        pass
-                    self.Net_Discount_Label.setText("Net Discount    : " + str(round(discount, 2)))     # type:ignore
-                    net_total = round(total + discount, 2)  # type:ignore
-                    self.Total_Label.setText("Total                  : " + str(round(total, 2)))  # type:ignore
-                    self.Net_Total_Label.setText("Net Total          : " + str(net_total))  # type:ignore
-                    self.Bill_Time_Label.setText("Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")))  # type:ignore
-                    self.setCellTracking(True)
+                self.CalcTotal()
+                self.setCellTracking(True)
             except:
                 try:
                     self.setCellTracking(True)
@@ -513,6 +549,41 @@ def closure():
                 except:
                     pass
 
+    def CalcTotal(self):
+        global total
+        net_total = int()
+        total = float()
+        discount = float()
+        try:
+            for key in bill_data.keys():
+                try:
+                    self.setCellTracking(False)
+                except:
+                    pass
+                try:
+                    total += float((self.getText(bill_data[key], Price_Col)))
+                except:
+                    pass
+                try:
+                    discount += float(self.getText(bill_data[key], Disc_Col))
+                except:
+                    pass
+        except:
+            pass
+        self.Net_Discount_Label.setText(# type:ignore
+            "Net Discount    : " + str(round(discount, 2))
+        )  
+        net_total = round(total + discount, 2)  # type:ignore
+        self.Total_Label.setText(# type:ignore
+            "Total                  : " + str(round(total, 2))
+        )  
+        self.Net_Total_Label.setText(# type:ignore
+            "Net Total          : " + str(net_total)
+        )  
+        self.Bill_Time_Label.setText(# type:ignore
+            "Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S"))
+
+        )  
     def log_bill(self):
         try:
             if total == 0:
@@ -520,7 +591,7 @@ def closure():
         except:
             return
         global Bill_No, cur
-        with open("Bills//{}.txt".format((Bill_No)), "w") as Bill:
+        with open(f"Bills//{Bill_No}.txt", "w") as Bill:
             Bill.writelines("")
             """
             Should add bill(text) content after determining the Paper size
@@ -546,8 +617,12 @@ def closure():
             information_dialog = QMessageBox()
             information_dialog.setWindowTitle("Success!")
             information_dialog.setText("Logged out successfully!")
-            information_dialog.setIcon(QMessageBox.Icon.Information)  # Optional: Information icon
-            information_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)  # Only OK button
+            information_dialog.setIcon(
+                QMessageBox.Icon.Information
+            )  # Optional: Information icon
+            information_dialog.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )  # Only OK button
             app.closeAllWindows()
             information_dialog.exec()
             information_dialog.close()
@@ -556,5 +631,6 @@ def closure():
         else:
             return
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Init()
