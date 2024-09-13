@@ -16,8 +16,9 @@ BMS Backup.sql
 test/*
 __pycache__/*
 test.ipynb
+Resources/icofi.ico
+Resources/lgfi.jpeg
 testt.py
-Resources/*
 Barcodes/*
 Barcode.py
 Batch1.pdf

@@ -1,7 +1,12 @@
 # Imports
+import os
 import string
 import asyncio
-from pyautogui import press, typewrite
+from win32api import ShellExecute
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from pathlib import Path
+from pyautogui import press
 from tkinter.filedialog import askopenfilename
 from typing import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
@@ -32,7 +37,7 @@ User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
 items_cache = {}
-
+DIREC = Path(__file__).resolve().parent
 
 def get_Api() -> str:
     """Returns the API URL for the server"""
@@ -234,7 +239,7 @@ class BMS_Home_GUI(QMainWindow):
 
     def setup(self):
         global Bill_No
-        self.setTheme("Qt resources//Theme//Default.qss")
+        self.setTheme("Resources/Default.qss")
         self.Bill_Number_Label.setText(# type:ignore
             "Bill No    : {}".format((Bill_No))
         )  
@@ -245,7 +250,7 @@ class BMS_Home_GUI(QMainWindow):
             "Billed By : {} ({})".format(Name, Designation)
         )  
         self.Bill_Time_Label.setText(# type:ignore
-            "Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S")) 
+            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S")) 
         ) 
         self.actionLogout.triggered.connect(lambda: self.logout())  # type:ignore
         self.actionThemes.triggered.connect(lambda: self.setTheme())  # type:ignore
@@ -283,23 +288,13 @@ class BMS_Home_GUI(QMainWindow):
             event.accept()
         else:
             event.ignore()
-        """
-        @atexit.register
-def closure():
-    try:
-        if not(cur.closed):
-            con.close()
-    except:
-        pass
-    global Admin
-    Admin=False"""
 
     def setTheme(self, path: None | str = None) -> None:
         try:
             if path is None:
                 path = askopenfilename(
                     title="Select Theme",
-                    initialdir="Qt Resources//Themes//",
+                    initialdir="Resources/",
                     filetypes=(("QSS", "*.qss"),),
                 )
         except:
@@ -308,7 +303,6 @@ def closure():
             with open(path) as f:  # type:ignore
                 stylesheet = f.read()
                 self.setStyleSheet(stylesheet)
-                self.setup()
         except:
             pass
 
@@ -477,7 +471,7 @@ def closure():
             elif col == Disc_prcnt_Col:  # Change in Discount Percent
                 try:
                     self.setCellTracking(False)
-                    Discount_Percentage = int(self.getText(row, Disc_prcnt_Col))
+                    Discount_Percentage = float(self.getText(row, Disc_prcnt_Col))
                     Quantity = int(self.getText(row, Qnty_Col))
                     Rate = int(self.getText(row, Rate_Col))
                     Price = Quantity * Rate
@@ -575,29 +569,106 @@ def closure():
         )  
         net_total = round(total + discount, 2)  # type:ignore
         self.Total_Label.setText(# type:ignore
-            "Total                  : " + str(round(total, 2))
+            "Total                 : " + str(round(total, 2))
         )  
         self.Net_Total_Label.setText(# type:ignore
             "Net Total          : " + str(net_total)
         )  
         self.Bill_Time_Label.setText(# type:ignore
-            "Bill Time :{}".format(datetime.now().time().strftime("%H:%M:%S"))
+            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
 
         )  
+        return {'total': total, 'net_Total': net_total, 'discount': discount}
+
     def log_bill(self):
         try:
             if total == 0:
                 return
         except:
             return
-        global Bill_No, cur
-        with open(f"Bills//{Bill_No}.txt", "w") as Bill:
-            Bill.writelines("")
-            """
-            Should add bill(text) content after determining the Paper size
-            """
-        ...
 
+        final = self.CalcTotal()
+        discount = float(final.get('discount', 0))
+
+        global Bill_No
+
+        # Define the content of your bill
+        company_name = "Fashion Paradise"
+        address1 = "No. 1, Richwood Avenue, Market Road,"
+        address2 = "Thaiyur - 603 103."
+        bill_number = Bill_No
+        bill_date = date.today().strftime("%d.%m.%Y")
+        bill_time = datetime.now().time().strftime("%H:%M:%S")
+        billed_by = f"{Name} ({Designation})"
+
+        # Set the font and font size
+        font_name = "Helvetica"
+        font_size = 10
+        line_height = font_size * 1.2
+
+        # Calculate the height of the content
+        #content_height = 1.7 * inch + line_height * len(bill_data) + 0.8 * inch#-.05
+        content_height = 11.9 * inch
+        # Create a new canvas with a page size of 3 inches wide and dynamic height
+        pdf_path = f"Bills/{Bill_No}.pdf"
+        c = canvas.Canvas(pdf_path, pagesize=(5 * inch , content_height))
+        c.setPageSize((3*inch, 11.7 * inch))
+        # Set the font and font size
+        c.setFont('Helvetica-Bold', 16)
+        # Add text to the canvas
+        c.drawString(0.5 * inch, content_height - 0.4 * inch, company_name)
+
+        c.setFont(font_name, font_size - 2)
+        c.drawString(0.48 * inch, content_height - 0.6 * inch, address1)
+        c.drawString(0.93 * inch, content_height - 0.75 * inch, address2)
+
+        c.setFont(font_name, font_size - 1) 
+        c.drawString(0.1 * inch, content_height - 1 * inch, f"Bill No: {bill_number}")
+        c.drawString(1.8 * inch, content_height - 1.2 * inch, f"Bill Date: {bill_date}")
+        c.drawString(0.1 * inch, content_height - 1.2 * inch, f"Bill Time: {bill_time}")
+        c.drawString(1.8 * inch, content_height - 1 * inch, f"Billed By: {billed_by.split()[0]}")
+
+        c.setFont(font_name + '-Bold', font_size - 1)
+        # Add table headers
+        c.drawString(0.06 * inch, content_height - 1.5 * inch, "S.No.")
+        c.drawString(0.74 * inch, content_height - 1.5 * inch, "Name")
+        c.drawString(1.74 * inch, content_height - 1.5 * inch, "Rate")
+        c.drawString(2.1 * inch, content_height - 1.5 * inch, "Qnty")
+        c.drawString(2.46 * inch, content_height - 1.5 * inch, "Amount")
+
+        # Add table data
+        y = content_height - 1.72 * inch
+        c.setFont(font_name, font_size - 2)
+        for sno, key in enumerate(bill_data.keys(), start=1):
+            name = self.getText(bill_data[key], Name_Col)
+            quantity = self.getText(bill_data[key], Qnty_Col)
+            rate = self.getText(bill_data[key], Rate_Col)
+            amount = self.getText(bill_data[key], Price_Col)
+
+            c.drawString(0.17 * inch, y, str(sno))
+            c.drawString(0.48 * inch, y, name[:22])
+            c.drawString(1.77 * inch, y, rate)
+            c.drawString(2.18 * inch, y, quantity)
+            c.drawString(2.57 * inch, y, amount)
+            self.resetRow(bill_data[key])
+            y -= line_height
+
+        disc_prct = round(discount * 100 / total, 2)
+        # Add total and net total
+        c.setFont('Helvetica', font_size + 1)
+        c.drawString(1 * inch, y - 0.15 * inch, f"Total        : Rs. {str(round(total, 2))}")
+        c.drawString(1 * inch, y - 0.35 * inch, f"Discount  : Rs. {str(discount)} ({str(disc_prct)}%)")
+        c.setFont('Helvetica-Bold', font_size + 1)
+        c.drawString(1 * inch, y - 0.55 * inch, f"Net Total : Rs. {str(round(float(final.get('discount', 0)), 2))}/-")
+
+        # Save the canvas to generate the PDF file
+        c.save()
+        location = os.path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
+        ShellExecute(0, "print", location, None, ".", 0)
+        bill_data.clear()
+        self.CalcTotal()
+        self.setup()
+        
     def logout(self):
         confirmation_dialog = QMessageBox(self)
         confirmation_dialog.setWindowTitle("Confirmation")
