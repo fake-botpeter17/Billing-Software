@@ -318,7 +318,10 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
 
     def getText(self, row: int, column: int) -> str:
-        return self.Bill_Table.item(row, column).text()  # type:ignore
+        data = self.Bill_Table.item(row, column)  # type:ignore
+        if data:
+            return data.text()
+        return ""
 
     def resetRow(self, row: int) -> None:
         for col in range(8):
@@ -354,6 +357,7 @@ class BMS_Home_GUI(QMainWindow):
                                     list(bill_data.keys())[ind]
                                 ]  # type:ignore
                                 self.CalcTotal()
+                        return
 
                 try:
                     data = items_cache.get(Item_ID)
@@ -512,7 +516,7 @@ class BMS_Home_GUI(QMainWindow):
                     try:
                         self.setCellTracking(True)
                         pass
-                    except:
+                    except: 
                         pass
             elif col == Name_Col:  # Change in Name column
                 try:
@@ -549,11 +553,11 @@ class BMS_Home_GUI(QMainWindow):
         total = float()
         discount = float()
         try:
-            for key in bill_data.keys():
-                try:
+            try:
                     self.setCellTracking(False)
-                except:
+            except:
                     pass
+            for key in bill_data.keys():
                 try:
                     total += float((self.getText(bill_data[key], Price_Col)))
                 except:
@@ -578,7 +582,7 @@ class BMS_Home_GUI(QMainWindow):
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
 
         )  
-        return {'total': total, 'net_Total': net_total, 'discount': discount}
+        return {'total': total, 'net_Total': total + discount, 'discount': discount}
 
     def log_bill(self):
         try:
@@ -589,7 +593,7 @@ class BMS_Home_GUI(QMainWindow):
 
         final = self.CalcTotal()
         discount = float(final.get('discount', 0))
-
+        nettotal = float(final.get('net_Total',0))
         global Bill_No
 
         # Define the content of your bill
@@ -639,32 +643,34 @@ class BMS_Home_GUI(QMainWindow):
         # Add table data
         y = content_height - 1.72 * inch
         c.setFont(font_name, font_size - 2)
-        for sno, key in enumerate(bill_data.keys(), start=1):
+        sno = 1
+        for key in bill_data.keys():
             name = self.getText(bill_data[key], Name_Col)
-            quantity = self.getText(bill_data[key], Qnty_Col)
-            rate = self.getText(bill_data[key], Rate_Col)
-            amount = self.getText(bill_data[key], Price_Col)
-
-            c.drawString(0.17 * inch, y, str(sno))
-            c.drawString(0.48 * inch, y, name[:22])
-            c.drawString(1.77 * inch, y, rate)
-            c.drawString(2.18 * inch, y, quantity)
-            c.drawString(2.57 * inch, y, amount)
-            self.resetRow(bill_data[key])
-            y -= line_height
-
-        disc_prct = round(discount * 100 / total, 2)
+            if name != "":
+                quantity = self.getText(bill_data[key], Qnty_Col)
+                rate = self.getText(bill_data[key], Rate_Col)
+                amount = round(int(quantity)*int(rate),2)
+                c.drawString(0.17 * inch, y, str(sno))
+                c.drawString(0.48 * inch, y, name[:22])
+                c.drawString(1.77 * inch, y, rate)
+                c.drawString(2.18 * inch, y, quantity)
+                c.drawString(2.57 * inch, y, str(amount))
+                self.resetRow(bill_data[key])
+                y -= line_height
+                sno += 1
+            else:
+                self.resetRow(bill_data[key])
         # Add total and net total
         c.setFont('Helvetica', font_size + 1)
-        c.drawString(1 * inch, y - 0.15 * inch, f"Total        : Rs. {str(round(total, 2))}")
-        c.drawString(1 * inch, y - 0.35 * inch, f"Discount  : Rs. {str(discount)} ({str(disc_prct)}%)")
+        c.drawString(1 * inch, y - 0.15 * inch, f"Total        : Rs. {str(round(nettotal, 2))}")
+        c.drawString(1 * inch, y - 0.35 * inch, f"Discount  : Rs. {str(discount)}")
         c.setFont('Helvetica-Bold', font_size + 1)
-        c.drawString(1 * inch, y - 0.55 * inch, f"Net Total : Rs. {str(round(float(final.get('discount', 0)), 2))}/-")
+        c.drawString(1 * inch, y - 0.55 * inch, f"Net Total : Rs. {str(round(nettotal-discount, 2))}/-")   
 
         # Save the canvas to generate the PDF file
         c.save()
         location = os.path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
-        ShellExecute(0, "print", location, None, ".", 0)
+        ShellExecute(0, "print", location, None, ".", 0)        #type: ignore
         bill_data.clear()
         self.CalcTotal()
         self.setup()
