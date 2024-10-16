@@ -2,6 +2,7 @@
 import os
 import string
 import asyncio
+from time import sleep
 from win32api import ShellExecute
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
@@ -80,6 +81,7 @@ def main():
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
+    window.showMaximized()
     exi(app.exec())
 
 
