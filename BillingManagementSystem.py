@@ -140,10 +140,12 @@ def Login() -> None:
             Auth(username_entry.get(), password_entry.get())
 
     def ValidInp(val, usr: bool = False):
+        if len(val) == 0:
+            return False
         if usr:
-            return username_entry.get().isalpha()
+            return val.isalpha()
         else:
-            pw: str = password_entry.get()
+            pw: str = val
             intersect = set(pw).intersection(punc)
             if len(intersect) == 0 or (
                 len(intersect) == 1 and ({"_"} == intersect or {"@"} == intersect)
