@@ -40,15 +40,17 @@ Bill_No = int()
 items_cache = {}
 DIREC = Path(__file__).resolve().parent
 
-def get_Api() -> str:
+def get_Api(testing: bool = False) -> str:
     """Returns the API URL for the server"""
+    if testing:
+        return 'http://127.0.0.1:5000'
     from pickle import load
 
     with open("Resources\\sak.dat", "rb") as file:
         return load(file).decode("utf-32")
 
 
-url = get_Api()
+url: str = get_Api(testing=False)
 
 
 def Init() -> None:
