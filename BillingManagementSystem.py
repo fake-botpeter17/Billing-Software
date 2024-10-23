@@ -9,7 +9,7 @@ from reportlab.lib.units import inch
 from pathlib import Path
 from pyautogui import press
 from tkinter.filedialog import askopenfilename
-from typing import Generator
+from collections.abc import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QTableWidget,
