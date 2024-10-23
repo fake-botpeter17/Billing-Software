@@ -1,7 +1,7 @@
 # Imports
 import os
 import string
-import asyncio
+from threading import Thread
 from time import sleep
 from win32api import ShellExecute
 from reportlab.pdfgen import canvas
@@ -69,7 +69,7 @@ def Init() -> None:
     Login()
 
 
-async def Items_Cacher():
+def Items_Cacher():
     global items_cache
     req = Request(url + "//get_items")
     with urlopen(req, timeout=15) as response:
@@ -79,7 +79,8 @@ async def Items_Cacher():
 
 
 def main():
-    asyncio.run(Items_Cacher())
+    Cacher = Thread(target=Items_Cacher())
+    Cacher.start()
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
