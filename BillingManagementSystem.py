@@ -3,6 +3,7 @@ import os
 import string
 from threading import Thread
 from time import sleep
+from requests import post
 from win32api import ShellExecute
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
@@ -22,7 +23,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 from urllib.request import Request, urlopen
-from json import loads
+from json import dumps, loads
 from datetime import datetime, date
 from sys import exit as exi
 
@@ -68,7 +69,6 @@ def Init() -> None:
     Admin = False
     Login()
 
-
 def Items_Cacher():
     global items_cache
     req = Request(url + "//get_items")
@@ -90,12 +90,12 @@ def main():
 
 def Bill_Number() -> Generator:
     # Get latest Bill No and save it to the below Variable
-    Latest_Bill = None
+    req = f'{url}/getLastBillNo'
+    with urlopen(Request(req)) as res:
+        Latest_Bill = loads(res.read().decode())
     if Latest_Bill is None:
-        Latest_Bill_No = 10000
-    else:
-        Latest_Bill_No = Latest_Bill
-    for Bill_Number in range(Latest_Bill_No + 1, 100000):
+        Latest_Bill = 10001
+    for Bill_Number in range(Latest_Bill + 1, 100000):
         yield Bill_Number
 
 
@@ -244,12 +244,12 @@ class BMS_Home_GUI(QMainWindow):
         self.setup()
         press("tab")
 
-    def setup(self):
+    def setup(self, init :bool = False):
         global Bill_No
         self.setTheme("Resources/Default.qss")
         self.Bill_Number_Label.setText(# type:ignore
-            "Bill No    : {}".format((Bill_No))
-        )  
+            "Bill No    : {}".format([Bill_No if not init else next(Bill_No_Gen)][0])
+        )
         self.Bill_Date_Label.setText(# type:ignore
             "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
         )  
@@ -559,6 +559,8 @@ class BMS_Home_GUI(QMainWindow):
         net_total = int()
         total = float()
         discount = float()
+        dsc_list: list[int | float] = []
+        qnty_list: list[int] = []
         try:
             try:
                     self.setCellTracking(False)
@@ -570,9 +572,17 @@ class BMS_Home_GUI(QMainWindow):
                 except:
                     pass
                 try:
-                    discount += float(self.getText(bill_data[key], Disc_Col))
+                    disc = float(self.getText(bill_data[key], Disc_Col))
+                    discount += disc
+                    dsc_list.append(disc)
                 except:
                     pass
+                try:
+                    qnty = int(self.getText(bill_data[key], Qnty_Col))
+                    qnty_list.append(qnty)
+                except:
+                    pass
+                    
         except:
             pass
         self.Net_Discount_Label.setText(# type:ignore
@@ -589,11 +599,11 @@ class BMS_Home_GUI(QMainWindow):
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
 
         )  
-        return {'total': total, 'net_Total': total + discount, 'discount': discount}
+        return {'total': total, 'net_Total': total + discount, 'discount': discount, 'dsc_list' : dsc_list, 'qnty_list' : qnty_list}
 
     def log_bill(self):
         try:
-            if total == 0:
+            if len(bill_data) == 0:
                 return
         except:
             return
@@ -678,9 +688,20 @@ class BMS_Home_GUI(QMainWindow):
         c.save()
         location = os.path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
         ShellExecute(0, "print", location, None, ".", 0)        #type: ignore
+        items_qry_data = {
+            'bill_no':Bill_No, 
+            'date': date.today().strftime("%d.%m.%Y") + ', '+datetime.now().time().strftime("%H:%M:%S"),
+            'items': list(bill_data.keys()),
+            'discounts': final['dsc_list'],
+            'quantity': final['qnty_list'],
+            'total' : round(nettotal-discount, 2)
+            }
+        print(items_qry_data)
+        json_data = dumps(items_qry_data)
+        post(f'{url}//bills',json=json_data)
         bill_data.clear()
         self.CalcTotal()
-        self.setup()
+        self.setup(init=True)
         
     def logout(self):
         confirmation_dialog = QMessageBox(self)
