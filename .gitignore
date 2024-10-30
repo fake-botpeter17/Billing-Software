@@ -16,4 +16,14 @@ BMS Backup.sql
 test/*
 test.ipynb
 testt.py
+Resources/*
+Barcodes/*
 __pycache__/*
+Barcode.py
+Batch1.pdf
+labels.pdf
+MRP_Labels.pdf
+queryFormat_custom.py
+queryFormat.py
+utils.py
+.gitignore

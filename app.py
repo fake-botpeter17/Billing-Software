@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+from json import loads
+from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from pickle import load
 from bcrypt import hashpw
@@ -19,6 +20,7 @@ if db_name is None:
 BMS = client[db_name]  
 users_table = BMS['users']
 items_table = BMS['items']
+bills_table = BMS['bills']
 
 @app.route('/items/<int:item_id>', methods=['GET'])
 def get_item(item_id: int):
@@ -43,7 +45,7 @@ def authenticate(user_id: str, password: str):
         return jsonify(result), 200
     return jsonify(None)
 
-@app.route("//get_items")
+@app.route("//get_items", methods=['GET'])
 def get_items():
     res = items_table.find({}, {'_id': False, 'added': False, 'cp': False, 'qnty': False})
     items = []
@@ -54,3 +56,17 @@ def get_items():
 @app.route("/connected")
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
+
+
+@app.route('/bills', methods = ['POST'])
+def add_bill():
+    data = loads(request.get_json())
+    bills_table.insert_one(data)
+    return jsonify(), 200
+
+@app.route('/getLastBillNo', methods = ['GET'])
+def get_latest_bill_no():
+    bill = bills_table.aggregate([{"$group": {"_id": None, "bill_no": {"$max": "$bill_no"}}}])
+    for bill_no in bill:
+        no = bill_no.get('bill_no', None)
+    return jsonify(no)
