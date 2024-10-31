@@ -41,10 +41,11 @@ Bill_No = int()
 items_cache = {}
 DIREC = Path(__file__).resolve().parent
 
+
 def get_Api(testing: bool = False) -> str:
     """Returns the API URL for the server"""
     if testing:
-        return 'http://127.0.0.1:5000'
+        return "http://127.0.0.1:5000"
     from pickle import load
 
     with open("Resources\\sak.dat", "rb") as file:
@@ -69,6 +70,7 @@ def Init() -> None:
     Admin = False
     Login()
 
+
 def Items_Cacher():
     global items_cache
     req = Request(url + "//get_items")
@@ -90,7 +92,7 @@ def main():
 
 def Bill_Number() -> Generator:
     # Get latest Bill No and save it to the below Variable
-    req = f'{url}/getLastBillNo'
+    req = f"{url}/getLastBillNo"
     with urlopen(Request(req)) as res:
         Latest_Bill = loads(res.read().decode())
     if Latest_Bill is None:
@@ -244,25 +246,25 @@ class BMS_Home_GUI(QMainWindow):
         self.setup()
         press("tab")
 
-    def setup(self, init :bool = False):
+    def setup(self, init: bool = False):
         global Bill_No
         self.setTheme("Resources/Default.qss")
-        self.Bill_Number_Label.setText(# type:ignore
+        self.Bill_Number_Label.setText(  # type:ignore
             "Bill No    : {}".format([Bill_No if not init else next(Bill_No_Gen)][0])
         )
-        self.Bill_Date_Label.setText(# type:ignore
+        self.Bill_Date_Label.setText(  # type:ignore
             "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
-        )  
-        self.Billed_By_Label.setText(# type:ignore
+        )
+        self.Billed_By_Label.setText(  # type:ignore
             "Billed By : {} ({})".format(Name, Designation)
-        )  
-        self.Bill_Time_Label.setText(# type:ignore
-            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S")) 
-        ) 
+        )
+        self.Bill_Time_Label.setText(  # type:ignore
+            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
+        )
         self.actionLogout.triggered.connect(lambda: self.logout())  # type:ignore
         self.actionThemes.triggered.connect(lambda: self.setTheme())  # type:ignore
-        self.Profile.triggered.connect( # type:ignore
-            lambda: Profile_(User)# type:ignore
+        self.Profile.triggered.connect(  # type:ignore
+            lambda: Profile_(User)  # type:ignore
         )  # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)  # type:ignore
         self.Bill_Table.setRowCount(26)  # type:ignore
@@ -352,8 +354,8 @@ class BMS_Home_GUI(QMainWindow):
                 except:  # Convertion Error (str -> int)
                     if (
                         self.Bill_Table.item(row, ID_Col).text() == ""  # type:ignore
-                        or self.Bill_Table.item(row, ID_Col).text()         # type:ignore
-                        == None  
+                        or self.Bill_Table.item(row, ID_Col).text()  # type:ignore
+                        == None
                     ):
                         self.resetRow(row)
                         tmp: list = list(bill_data.values())
@@ -523,7 +525,7 @@ class BMS_Home_GUI(QMainWindow):
                     try:
                         self.setCellTracking(True)
                         pass
-                    except: 
+                    except:
                         pass
             elif col == Name_Col:  # Change in Name column
                 try:
@@ -563,9 +565,9 @@ class BMS_Home_GUI(QMainWindow):
         qnty_list: list[int] = []
         try:
             try:
-                    self.setCellTracking(False)
+                self.setCellTracking(False)
             except:
-                    pass
+                pass
             for key in bill_data.keys():
                 try:
                     total += float((self.getText(bill_data[key], Price_Col)))
@@ -582,24 +584,29 @@ class BMS_Home_GUI(QMainWindow):
                     qnty_list.append(qnty)
                 except:
                     pass
-                    
+
         except:
             pass
-        self.Net_Discount_Label.setText(# type:ignore
+        self.Net_Discount_Label.setText(  # type:ignore
             "Net Discount    : " + str(round(discount, 2))
-        )  
+        )
         net_total = round(total + discount, 2)  # type:ignore
-        self.Total_Label.setText(# type:ignore
+        self.Total_Label.setText(  # type:ignore
             "Total                 : " + str(round(total, 2))
-        )  
-        self.Net_Total_Label.setText(# type:ignore
+        )
+        self.Net_Total_Label.setText(  # type:ignore
             "Net Total          : " + str(net_total)
-        )  
-        self.Bill_Time_Label.setText(# type:ignore
+        )
+        self.Bill_Time_Label.setText(  # type:ignore
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
-
-        )  
-        return {'total': total, 'net_Total': total + discount, 'discount': discount, 'dsc_list' : dsc_list, 'qnty_list' : qnty_list}
+        )
+        return {
+            "total": total,
+            "net_Total": total + discount,
+            "discount": discount,
+            "dsc_list": dsc_list,
+            "qnty_list": qnty_list,
+        }
 
     def log_bill(self):
         try:
@@ -609,8 +616,8 @@ class BMS_Home_GUI(QMainWindow):
             return
 
         final = self.CalcTotal()
-        discount = float(final.get('discount', 0))
-        nettotal = float(final.get('net_Total',0))
+        discount = float(final.get("discount", 0))
+        nettotal = float(final.get("net_Total", 0))
         global Bill_No
 
         # Define the content of your bill
@@ -628,14 +635,14 @@ class BMS_Home_GUI(QMainWindow):
         line_height = font_size * 1.2
 
         # Calculate the height of the content
-        #content_height = 1.7 * inch + line_height * len(bill_data) + 0.8 * inch#-.05
+        # content_height = 1.7 * inch + line_height * len(bill_data) + 0.8 * inch#-.05
         content_height = 11.9 * inch
         # Create a new canvas with a page size of 3 inches wide and dynamic height
         pdf_path = f"Bills/{Bill_No}.pdf"
-        c = canvas.Canvas(pdf_path, pagesize=(5 * inch , content_height))
-        c.setPageSize((3*inch, 11.7 * inch))
+        c = canvas.Canvas(pdf_path, pagesize=(5 * inch, content_height))
+        c.setPageSize((3 * inch, 11.7 * inch))
         # Set the font and font size
-        c.setFont('Helvetica-Bold', 16)
+        c.setFont("Helvetica-Bold", 16)
         # Add text to the canvas
         c.drawString(0.5 * inch, content_height - 0.4 * inch, company_name)
 
@@ -643,13 +650,13 @@ class BMS_Home_GUI(QMainWindow):
         c.drawString(0.48 * inch, content_height - 0.6 * inch, address1)
         c.drawString(0.93 * inch, content_height - 0.75 * inch, address2)
 
-        c.setFont(font_name, font_size - 1) 
+        c.setFont(font_name, font_size - 1)
         c.drawString(0.1 * inch, content_height - 1 * inch, f"Bill No: {bill_number}")
         c.drawString(1.8 * inch, content_height - 1.2 * inch, f"Bill Date: {bill_date}")
         c.drawString(0.1 * inch, content_height - 1.2 * inch, f"Bill Time: {bill_time}")
         c.drawString(1.8 * inch, content_height - 1 * inch, f"Billed By: {billed_by.split()[0]}")
 
-        c.setFont(font_name + '-Bold', font_size - 1)
+        c.setFont(font_name + "-Bold", font_size - 1)
         # Add table headers
         c.drawString(0.06 * inch, content_height - 1.5 * inch, "S.No.")
         c.drawString(0.74 * inch, content_height - 1.5 * inch, "Name")
@@ -666,7 +673,7 @@ class BMS_Home_GUI(QMainWindow):
             if name != "":
                 quantity = self.getText(bill_data[key], Qnty_Col)
                 rate = self.getText(bill_data[key], Rate_Col)
-                amount = round(int(quantity)*int(rate),2)
+                amount = round(int(quantity) * int(rate), 2)
                 c.drawString(0.17 * inch, y, str(sno))
                 c.drawString(0.48 * inch, y, name[:22])
                 c.drawString(1.77 * inch, y, rate)
@@ -687,22 +694,24 @@ class BMS_Home_GUI(QMainWindow):
         # Save the canvas to generate the PDF file
         c.save()
         location = os.path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
-        ShellExecute(0, "print", location, None, ".", 0)        #type: ignore
+        ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
         items_qry_data = {
-            'bill_no':Bill_No, 
-            'date': date.today().strftime("%d.%m.%Y") + ', '+datetime.now().time().strftime("%H:%M:%S"),
-            'items': list(bill_data.keys()),
-            'discounts': final['dsc_list'],
-            'quantity': final['qnty_list'],
-            'total' : round(nettotal-discount, 2)
-            }
+            "bill_no": Bill_No,
+            "date": date.today().strftime("%d.%m.%Y")
+            + ", "
+            + datetime.now().time().strftime("%H:%M:%S"),
+            "items": list(bill_data.keys()),
+            "discounts": final["dsc_list"],
+            "quantity": final["qnty_list"],
+            "total": round(nettotal - discount, 2),
+        }
         print(items_qry_data)
         json_data = dumps(items_qry_data)
-        post(f'{url}//bills',json=json_data)
+        post(f"{url}//bills", json=json_data)
         bill_data.clear()
         self.CalcTotal()
         self.setup(init=True)
-        
+
     def logout(self):
         confirmation_dialog = QMessageBox(self)
         confirmation_dialog.setWindowTitle("Confirmation")
