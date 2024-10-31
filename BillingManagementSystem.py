@@ -484,7 +484,11 @@ class BMS_Home_GUI(QMainWindow):
             elif col == Disc_prcnt_Col:  # Change in Discount Percent
                 try:
                     self.setCellTracking(False)
-                    Discount_Percentage = float(self.getText(row, Disc_prcnt_Col))
+                    try:
+                        Discount_Percentage = float(self.getText(row, Disc_prcnt_Col))
+                    except ValueError:
+                        Discount_Percentage = 0
+                        self.setBillColumn(row,col, 0)
                     Quantity = int(self.getText(row, Qnty_Col))
                     Rate = int(self.getText(row, Rate_Col))
                     Price = Quantity * Rate
@@ -498,7 +502,11 @@ class BMS_Home_GUI(QMainWindow):
             elif col == Disc_Col:  # Change in Discount price
                 try:
                     self.setCellTracking(False)
-                    Discount = int(self.getText(row, Disc_Col))
+                    try:
+                        Discount = int(self.getText(row, Disc_Col))
+                    except ValueError:
+                        Discount = 0
+                        self.setBillColumn(row,col, 0)
                     Quantity = int(self.getText(row, Qnty_Col))
                     Rate = int(self.getText(row, Rate_Col))
                     Price = Quantity * Rate
