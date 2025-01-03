@@ -33,34 +33,39 @@ DIREC = Path(__file__).resolve().parent
 #Importing Punctuations for Password Validation
 punc : LiteralString = string.punctuation
 
-class User_:
+class User:
     __Name :str = str()
     __Designation :str = str()
     __UID :str = str()
     __Logging_Out :bool = False
 
     @classmethod
-    def update(cls  : "User_", uid : str, **kwargs : dict[str, str]) -> None:
+    def update(cls  : "User", uid : str, **kwargs : dict[str, str]) -> None:
         """Sets the current user info"""
         cls.__Name :str = kwargs.get("name")
         cls.__Designation :str = kwargs.get("designation")
         cls.__UID :str = uid
 
     @classmethod
-    def getNameDesignation(cls : "User_") -> tuple[str, str]:
+    def getNameDesignation(cls : "User") -> tuple[str, str]:
         return cls.__Name, cls.__Designation
 
     @classmethod
-    def isAdmin(cls : "User_") -> bool:
+    def isAdmin(cls : "User") -> bool:
         '''Checks if the current user is an Admin'''
         return cls.__Designation.casefold() == "Admin".casefold()
 
     @classmethod
-    def isLoggingOut(cls : "User_") -> bool:
+    def isLoggingOut(cls : "User") -> bool:
         return cls.__Logging_Out
+    
+    @classmethod
+    def toggleLoggingOut(cls : "User") -> None:
+        cls.__Logging_Out = True
+        cls.resetUser()
 
     @classmethod
-    def resetUser(cls : "User_") -> None:
+    def resetUser(cls : "User") -> None:
         cls.__Name :str = str()
         cls.__Designation :str = str()
         cls.__UID :str = str()
@@ -118,15 +123,9 @@ class Bill_:
             cls.__Items[item["id"]] = item
 
 # Global Variables
-Admin = False  # Used for Authentication and permissions done
-Name = str()  # Name of the User    done
-logging_out = False #done
-Designation = None  # Designation of the User
-User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
 items_cache = {}
-
 
 def get_Api(testing: bool = False) -> str:
     """Returns the API URL for the server"""
@@ -152,8 +151,6 @@ def Init() -> None:
     except Exception as e:
         messagebox.showerror("Error", f"Error: {e}")
         exit(True)
-    global Admin
-    Admin = False
     Login()
 
 
@@ -283,14 +280,9 @@ def Auth(user: str, pwd: str) -> None:
     result = loads(response)
     # Comparing Hashed Passwords
     if result is not None:
-        User_.update(uid=user, **result)
+        User.update(uid=user, **result)
         Bill_.Init()
-        global Designation, Name
-        Designation = result["designation"].title()
-        Name = result["name"]
-        if Designation.casefold() == "Admin".casefold():
-            global Admin
-            Admin = True
+        if User.isAdmin():
             messagebox.showinfo(
                 title="Login Successful!", message="You are now logged in as Admin."
             )
@@ -298,8 +290,6 @@ def Auth(user: str, pwd: str) -> None:
             messagebox.showinfo(
                 title="Login Successful!", message="You are now logged in."
             )
-        global User
-        User = user
         login_window.destroy()  # Closing the Login Window after successful Login
         main()
     else:
@@ -323,10 +313,10 @@ class BMS_Home_GUI(QMainWindow):
         min_height = 900
         min_width = int(min_height * aspect_ratio)
         self.setMinimumSize(min_width, min_height)
-        self.setWindowTitle("BMS -botpeter17")
+        self.setWindowTitle(f"BMS - {User.getNameDesignation()[0]}")
         icon = QIcon("My_Icon.ico")
         self.setWindowIcon(icon)
-        if Admin:
+        if User.isAdmin():
             self.menuSales.setEnabled(True)  # type:ignore
             self.menuStock.setEnabled(True)  # type:ignore
             self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit # type:ignore
@@ -344,7 +334,7 @@ class BMS_Home_GUI(QMainWindow):
             "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
         )
         self.Billed_By_Label.setText(  # type:ignore
-            "Billed By : {} ({})".format(Name, Designation)
+            "Billed By : {} ({})".format(*User.getNameDesignation())
         )
         self.Bill_Time_Label.setText(  # type:ignore
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
@@ -369,8 +359,7 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setColumnWidth(BillTableColumn.Disc, 175)  # type:ignore
 
     def closeEvent(self, event):
-        global logging_out
-        if logging_out:
+        if User.isLoggingOut():
             return
         reply = QMessageBox.question(
             self,
@@ -380,8 +369,7 @@ class BMS_Home_GUI(QMainWindow):
             QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
-            global Admin
-            Admin = False
+            User.resetUser()
             event.accept()
         else:
             event.ignore()
@@ -391,7 +379,7 @@ class BMS_Home_GUI(QMainWindow):
             if path is None:
                 path = askopenfilename(
                     title="Select Theme",
-                    initialdir="Resources/",
+                    initialdir=DIREC,
                     filetypes=(("QSS", "*.qss"),),
                 )
         except:
@@ -723,7 +711,7 @@ class BMS_Home_GUI(QMainWindow):
         bill_number = Bill_No
         bill_date = date.today().strftime("%d.%m.%Y")
         bill_time = datetime.now().time().strftime("%H:%M:%S")
-        billed_by = f"{Name} ({Designation})"
+        billed_by = "{} ({})".format(*User.getNameDesignation())
 
         # Set the font and font size
         font_name = "Helvetica"
@@ -818,9 +806,7 @@ class BMS_Home_GUI(QMainWindow):
         confirmation_dialog.setIcon(QMessageBox.Icon.Question)
         reply = confirmation_dialog.exec()
         if reply == QMessageBox.StandardButton.Yes:
-            global Admin, logging_out
-            logging_out = True
-            Admin = False
+            User.toggleLoggingOut()
             self.menuSales.setEnabled(False)  # type:ignore
             self.menuStock.setEnabled(False)  # type:ignore
             self.New_Bill_Tab.setEnabled(False)  # type:ignore
