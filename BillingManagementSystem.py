@@ -1,6 +1,6 @@
 # Imports
-import os
 import string
+from os import path
 from threading import Thread
 from time import sleep
 from requests import post
@@ -26,9 +26,17 @@ from urllib.request import Request, urlopen
 from json import dumps, loads
 from datetime import datetime, date
 from sys import exit as exi
+from qt_helper import BillTableColumn
 
 # Global Declaration of Column Position
-Name_Col, Rate_Col, ID_Col, Qnty_Col, Disc_prcnt_Col, Disc_Col, Price_Col = 2,3,1,4,5,6,7
+Name_Col = BillTableColumn.Name
+Rate_Col = BillTableColumn.Rate
+ID_Col = BillTableColumn.Id
+Qnty_Col = BillTableColumn.Qnty
+Disc_prcnt_Col = BillTableColumn.Disc_prcnt
+Disc_Col = BillTableColumn.Disc
+Price_Col = BillTableColumn.Price
+#Importing Punctuations for Password Validation
 punc = string.punctuation
 # Global Variables
 Admin = False  # Used for Authentication and permissions
@@ -81,7 +89,7 @@ def Items_Cacher():
 
 
 def main():
-    Cacher = Thread(target=Items_Cacher())
+    Cacher = Thread(target=Items_Cacher)
     Cacher.start()
     global app
     app = QApplication([])
@@ -701,7 +709,7 @@ class BMS_Home_GUI(QMainWindow):
 
         # Save the canvas to generate the PDF file
         c.save()
-        location = os.path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
+        location = path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
         ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
         items_qry_data = {
             "bill_no": Bill_No,
