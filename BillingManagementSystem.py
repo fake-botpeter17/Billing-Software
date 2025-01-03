@@ -2,6 +2,7 @@
 import string
 from os import path
 from threading import Thread
+from typing import LiteralString
 from requests import post
 from win32api import ShellExecute
 from reportlab.pdfgen import canvas
@@ -27,18 +28,104 @@ from datetime import datetime, date
 from sys import exit as exi
 from qt_helper import BillTableColumn
 
+DIREC = Path(__file__).resolve().parent
+
 #Importing Punctuations for Password Validation
-punc = string.punctuation
+punc : LiteralString = string.punctuation
+
+class User_:
+    __Name :str = str()
+    __Designation :str = str()
+    __UID :str = str()
+    __Logging_Out :bool = False
+
+    @classmethod
+    def update(cls  : "User_", uid : str, **kwargs : dict[str, str]) -> None:
+        """Sets the current user info"""
+        cls.__Name :str = kwargs.get("name")
+        cls.__Designation :str = kwargs.get("designation")
+        cls.__UID :str = uid
+
+    @classmethod
+    def getNameDesignation(cls : "User_") -> tuple[str, str]:
+        return cls.__Name, cls.__Designation
+
+    @classmethod
+    def isAdmin(cls : "User_") -> bool:
+        '''Checks if the current user is an Admin'''
+        return cls.__Designation.casefold() == "Admin".casefold()
+
+    @classmethod
+    def isLoggingOut(cls : "User_") -> bool:
+        return cls.__Logging_Out
+
+    @classmethod
+    def resetUser(cls : "User_") -> None:
+        cls.__Name :str = str()
+        cls.__Designation :str = str()
+        cls.__UID :str = str()
+
+class Bill_:
+    __Bill_No_Gen :Generator
+    __Bill_No :int
+    __Items :dict = dict()
+    __Cart :dict = dict()
+
+    @staticmethod
+    def __Bill_Number() -> Generator:
+        """Retreives the latest Bill Number"""
+        req :str = f"{url}/getLastBillNo"
+        with urlopen(Request(req)) as res:
+            Latest_Bill : int | None = loads(res.read().decode())
+        if not Latest_Bill:
+            Latest_Bill = 10001
+        for Bill_Number in range(Latest_Bill + 1, 100000):
+            yield Bill_Number
+
+    @classmethod
+    def Init(cls : "Bill_") -> None:
+        cls.__Bill_No_Gen = cls.__Bill_Number()
+        cls.__Bill_No = next(cls.__Bill_No_Gen)
+        Cacher = Thread(target=cls.Items_Cacher)
+        Cacher.start()
+
+    @classmethod
+    def Get_Bill_No(cls : "Bill_") -> int:
+        return cls.__Bill_No
+
+    @staticmethod
+    def Get_Date() -> str:
+        """Returns the current date."""
+        return date.today().strftime("%B %d, %Y")
+
+    @staticmethod
+    def Get_Time() -> str:
+        """Returns the current time."""
+        return datetime.now().time().strftime("%H:%M:%S")
+    
+    @classmethod
+    def Increment_Bill_No(cls : "Bill_") -> None:
+        cls.__Bill_No = next(cls.__Bill_No_Gen)
+
+    @classmethod
+    def Items_Cacher(cls : "Bill_") -> None:
+        req = Request(url + "//get_items")
+        with urlopen(req, timeout=15) as response:
+            items_cache = loads(response.read().decode())
+        if not items_cache:
+            return
+        for item in items_cache:
+            cls.__Items[item["id"]] = item
+
 # Global Variables
-Admin = False  # Used for Authentication and permissions
-Name = str()  # Name of the User
-logging_out = False
-Designation = None
+Admin = False  # Used for Authentication and permissions done
+Name = str()  # Name of the User    done
+logging_out = False #done
+Designation = None  # Designation of the User
 User = str()  # Stores the current user info
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
 items_cache = {}
-DIREC = Path(__file__).resolve().parent
 
 
 def get_Api(testing: bool = False) -> str:
@@ -51,7 +138,7 @@ def get_Api(testing: bool = False) -> str:
         return load(file).decode("utf-32")
 
 
-url: str = get_Api(testing=False)
+url: str = get_Api()
 
 
 def Init() -> None:
@@ -196,6 +283,8 @@ def Auth(user: str, pwd: str) -> None:
     result = loads(response)
     # Comparing Hashed Passwords
     if result is not None:
+        User_.update(uid=user, **result)
+        Bill_.Init()
         global Designation, Name
         Designation = result["designation"].title()
         Name = result["name"]
