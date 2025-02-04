@@ -75,6 +75,10 @@ class Bill_:
     __Bill_No :int
     __Items :dict = dict()
     __Cart :dict = dict()
+    __Row_Lookup :dict = dict()
+
+    def __contains__(self, item_id: int) -> bool:
+        return item_id in self.__Cart
 
     @staticmethod
     def __Bill_Number() -> Generator:
@@ -87,17 +91,6 @@ class Bill_:
         for Bill_Number in range(Latest_Bill + 1, 100000):
             yield Bill_Number
 
-    @classmethod
-    def Init(cls : "Bill_") -> None:
-        cls.__Bill_No_Gen = cls.__Bill_Number()
-        cls.__Bill_No = next(cls.__Bill_No_Gen)
-        Cacher = Thread(target=cls.Items_Cacher)
-        Cacher.start()
-
-    @classmethod
-    def Get_Bill_No(cls : "Bill_") -> int:
-        return cls.__Bill_No
-
     @staticmethod
     def Get_Date() -> str:
         """Returns the current date."""
@@ -109,8 +102,29 @@ class Bill_:
         return datetime.now().time().strftime("%H:%M:%S")
     
     @classmethod
+    def Init(cls : "Bill_") -> None:
+        cls.__Bill_No_Gen = cls.__Bill_Number()
+        cls.__Bill_No = next(cls.__Bill_No_Gen)
+        Cacher = Thread(target=cls.Items_Cacher)
+        Cacher.start()
+
+    @classmethod
+    def Get_Bill_No(cls : "Bill_") -> int:
+        return cls.__Bill_No
+
+    @classmethod
     def Increment_Bill_No(cls : "Bill_") -> None:
         cls.__Bill_No = next(cls.__Bill_No_Gen)
+
+    # @classmethod
+    # def remove_row_item(cls : "Bill_", row_number : int) -> None:
+    #     if cls.__Row_Lookup(row_number) in cls.__Cart:
+    #         del cls.__Cart[cls.get_row_item(row_number)]
+    #     ...
+
+    # @classmethod
+    # def get_row_item(cls: "Bill_", row_number: int) -> int:
+    #     return cls.__Row_Lookup.get(row_number)
 
     @classmethod
     def Items_Cacher(cls : "Bill_") -> None:
@@ -138,7 +152,7 @@ def get_Api(testing: bool = False) -> str:
 
 
 url: str = get_Api()
-
+  
 
 def Init() -> None:
     try:
@@ -402,10 +416,10 @@ class BMS_Home_GUI(QMainWindow):
             return
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
 
-    def getText(self, row: int, column: int) -> str:
+    def getText(self, row: int, column: int, dtype : type = str) -> str:
         data = self.Bill_Table.item(row, column)  # type:ignore
         if data:
-            return data.text()
+            return dtype(data.text())
         return ""
 
     def resetRow(self, row: int) -> None:
@@ -442,6 +456,7 @@ class BMS_Home_GUI(QMainWindow):
                                     list(bill_data.keys())[ind]
                                 ]  # type:ignore
                                 self.CalcTotal()
+                        # Bill_.remove_row_item(row)
                         return
 
                 try:
