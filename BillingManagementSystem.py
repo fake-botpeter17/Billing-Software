@@ -26,129 +26,21 @@ from urllib.request import Request, urlopen
 from json import dumps, loads
 from datetime import datetime, date
 from sys import exit as exi
+# Custom Imports
 from qt_helper import BillTableColumn
+from utils import User
+from utils import Bill_ as Bill
+from api import get_Api
 
 DIREC = Path(__file__).resolve().parent
 
 #Importing Punctuations for Password Validation
 punc : LiteralString = string.punctuation
 
-class User:
-    __Name :str = str()
-    __Designation :str = str()
-    __UID :str = str()
-    __Logging_Out :bool = False
-
-    @classmethod
-    def update(cls  : "User", uid : str, **kwargs : dict[str, str]) -> None:
-        """Sets the current user info"""
-        cls.__Name :str = kwargs.get("name")
-        cls.__Designation :str = kwargs.get("designation")
-        cls.__UID :str = uid
-
-    @classmethod
-    def getNameDesignation(cls : "User") -> tuple[str, str]:
-        return cls.__Name, cls.__Designation
-
-    @classmethod
-    def isAdmin(cls : "User") -> bool:
-        '''Checks if the current user is an Admin'''
-        return cls.__Designation.casefold() == "Admin".casefold()
-
-    @classmethod
-    def isLoggingOut(cls : "User") -> bool:
-        return cls.__Logging_Out
-    
-    @classmethod
-    def toggleLoggingOut(cls : "User") -> None:
-        cls.__Logging_Out = True
-        cls.resetUser()
-
-    @classmethod
-    def resetUser(cls : "User") -> None:
-        cls.__Name :str = str()
-        cls.__Designation :str = str()
-        cls.__UID :str = str()
-
-class Bill_:
-    __Bill_No_Gen :Generator
-    __Bill_No :int
-    __Items :dict = dict()
-    __Cart :dict = dict()
-    __Row_Lookup :dict = dict()
-
-    def __contains__(self, item_id: int) -> bool:
-        return item_id in self.__Cart
-
-    @staticmethod
-    def __Bill_Number() -> Generator:
-        """Retreives the latest Bill Number"""
-        req :str = f"{url}/getLastBillNo"
-        with urlopen(Request(req)) as res:
-            Latest_Bill : int | None = loads(res.read().decode())
-        if not Latest_Bill:
-            Latest_Bill = 10001
-        for Bill_Number in range(Latest_Bill + 1, 100000):
-            yield Bill_Number
-
-    @staticmethod
-    def Get_Date() -> str:
-        """Returns the current date."""
-        return date.today().strftime("%B %d, %Y")
-
-    @staticmethod
-    def Get_Time() -> str:
-        """Returns the current time."""
-        return datetime.now().time().strftime("%H:%M:%S")
-    
-    @classmethod
-    def Init(cls : "Bill_") -> None:
-        cls.__Bill_No_Gen = cls.__Bill_Number()
-        cls.__Bill_No = next(cls.__Bill_No_Gen)
-        Cacher = Thread(target=cls.Items_Cacher)
-        Cacher.start()
-
-    @classmethod
-    def Get_Bill_No(cls : "Bill_") -> int:
-        return cls.__Bill_No
-
-    @classmethod
-    def Increment_Bill_No(cls : "Bill_") -> None:
-        cls.__Bill_No = next(cls.__Bill_No_Gen)
-
-    # @classmethod
-    # def remove_row_item(cls : "Bill_", row_number : int) -> None:
-    #     if cls.__Row_Lookup(row_number) in cls.__Cart:
-    #         del cls.__Cart[cls.get_row_item(row_number)]
-    #     ...
-
-    # @classmethod
-    # def get_row_item(cls: "Bill_", row_number: int) -> int:
-    #     return cls.__Row_Lookup.get(row_number)
-
-    @classmethod
-    def Items_Cacher(cls : "Bill_") -> None:
-        req = Request(url + "//get_items")
-        with urlopen(req, timeout=15) as response:
-            items_cache = loads(response.read().decode())
-        if not items_cache:
-            return
-        for item in items_cache:
-            cls.__Items[item["id"]] = item
-
 # Global Variables
 bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
 Bill_No = int()
 items_cache = {}
-
-def get_Api(testing: bool = False) -> str:
-    """Returns the API URL for the server"""
-    if testing:
-        return "http://127.0.0.1:5000"
-    from pickle import load
-
-    with open("Resources\\sak.dat", "rb") as file:
-        return load(file).decode("utf-32")
 
 
 url: str = get_Api()
@@ -295,7 +187,7 @@ def Auth(user: str, pwd: str) -> None:
     # Comparing Hashed Passwords
     if result is not None:
         User.update(uid=user, **result)
-        Bill_.Init()
+        Bill.Init()
         if User.isAdmin():
             messagebox.showinfo(
                 title="Login Successful!", message="You are now logged in as Admin."
@@ -456,7 +348,7 @@ class BMS_Home_GUI(QMainWindow):
                                     list(bill_data.keys())[ind]
                                 ]  # type:ignore
                                 self.CalcTotal()
-                        # Bill_.remove_row_item(row)
+                        # Bill.remove_row_item(row)
                         return
 
                 try:
