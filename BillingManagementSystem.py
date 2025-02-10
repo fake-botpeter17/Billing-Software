@@ -37,14 +37,7 @@ DIREC = Path(__file__).resolve().parent
 #Importing Punctuations for Password Validation
 punc : LiteralString = string.punctuation
 
-# Global Variables
-bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
-Bill_No = int()
-items_cache = {}
-
-
 url: str = get_Api()
-  
 
 def Init() -> None:
     try:
@@ -60,34 +53,12 @@ def Init() -> None:
     Login()
 
 
-def Items_Cacher():
-    global items_cache
-    req = Request(url + "//get_items")
-    with urlopen(req, timeout=15) as response:
-        items_cache_ = loads(response.read().decode())
-    for item in items_cache_:
-        items_cache[item["id"]] = item
-
-
 def main():
-    Cacher = Thread(target=Items_Cacher)
-    Cacher.start()
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
     window.showMaximized()
     exi(app.exec())
-
-
-def Bill_Number() -> Generator:
-    # Get latest Bill No and save it to the below Variable
-    req = f"{url}/getLastBillNo"
-    with urlopen(Request(req)) as res:
-        Latest_Bill = loads(res.read().decode())
-    if Latest_Bill is None:
-        Latest_Bill = 10001
-    for Bill_Number in range(Latest_Bill + 1, 100000):
-        yield Bill_Number
 
 
 def Login() -> None:
@@ -203,7 +174,7 @@ def Auth(user: str, pwd: str) -> None:
             title="Authentication Error!", message="Wrong Username or Password"
         )
 
-Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
+# Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
 
 
 class BMS_Home_GUI(QMainWindow):
@@ -211,8 +182,6 @@ class BMS_Home_GUI(QMainWindow):
         """
         Should Set the Column width from code appropriately
         """
-        global Bill_No
-        Bill_No = next(Bill_No_Gen)
         super(BMS_Home_GUI, self).__init__()
         uic.loadUi("BMS_Home_GUI.ui", self)  # type:ignore
         aspect_ratio = 16 / 9  # aspect ratio
@@ -234,16 +203,16 @@ class BMS_Home_GUI(QMainWindow):
         global Bill_No
         self.setTheme("Resources/Default.qss")
         self.Bill_Number_Label.setText(  # type:ignore
-            "Bill No    : {}".format([Bill_No if not init else next(Bill_No_Gen)][0])
+            "Bill No    : {}".format(Bill.Get_Bill_No())
         )
         self.Bill_Date_Label.setText(  # type:ignore
-            "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
+            "Bill Date : {}".format(Bill.Get_Date())
         )
         self.Billed_By_Label.setText(  # type:ignore
             "Billed By : {} ({})".format(*User.getNameDesignation())
         )
         self.Bill_Time_Label.setText(  # type:ignore
-            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
+            "Bill Time : {}".format(Bill.Get_Time())
         )
         self.actionLogout.triggered.connect(lambda: self.logout())  # type:ignore
         self.actionThemes.triggered.connect(lambda: self.setTheme())  # type:ignore
@@ -320,14 +289,13 @@ class BMS_Home_GUI(QMainWindow):
 
     def handle_cell_change(self, row, col):
         if row is not None:
-            global bill_data
             if col == BillTableColumn.Id:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
-                    s = self.getText(row, BillTableColumn.Id)
+                    s = self.getText(row, BillTableColumn.Id)   #TODO: type conversion using parameter
                     Item_ID = int(s)
                     del s
-                    if Item_ID not in bill_data:
+                    if Bill.contains(Item_ID):
                         try:
                             self.setCellTracking(False)
                         except:
@@ -341,14 +309,14 @@ class BMS_Home_GUI(QMainWindow):
                     ):
                         self.resetRow(row)
                         tmp: list = list(bill_data.values())
-                        if tmp is not None:
+                        if tmp is not None:         #TODO: Optimize
                             if row in tmp:
                                 ind = tmp.index(row)
                                 del bill_data[
                                     list(bill_data.keys())[ind]
                                 ]  # type:ignore
                                 self.CalcTotal()
-                        # Bill.remove_row_item(row)
+                        # Bill.remove_row_item(row)     #TODO: Implement
                         return
 
                 try:

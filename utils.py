@@ -47,7 +47,8 @@ class User:
         cls.__Name :str = str()
         cls.__Designation :str = str()
         cls.__UID :str = str()
-
+        cls.__Logging_Out :bool = False
+        
 class Bill_:
     __Bill_No_Gen :Generator
     __Bill_No :int
@@ -55,14 +56,15 @@ class Bill_:
     __Cart :dict = dict()
     __Row_Lookup :dict = dict()
 
-    def __contains__(self, item_id: int) -> bool:
+    @classmethod
+    def contains(cls, item_id: int) -> bool:
         """Checks if the given item ID is in the cart"""
-        return item_id in self.__Cart
+        return item_id in cls.__Cart
 
     @staticmethod
-    def __Bill_Number() -> Generator:
+    def __Bill_Number(testing :bool = False) -> Generator:
         """Retreives the latest Bill Number"""
-        Latest_Bill : int | None = get(f"{get_Api(testing=False)}/getLastBillNo").json()
+        Latest_Bill : int | None = get(f"{get_Api(testing)}/getLastBillNo").json()
         if not Latest_Bill:
             Latest_Bill = 10001
         for Bill_Number in range(Latest_Bill + 1, 100000):
@@ -89,6 +91,10 @@ class Bill_:
     def Get_Bill_No(cls : "Bill_") -> int:
         """Returns the current bill number"""
         return cls.__Bill_No
+
+    @classmethod
+    def Get_Item(cls : "Bill_", Item_ID :int) -> dict[int | str : int | str]:
+        return cls.__Items.get(Item_ID)
 
     @classmethod
     def Increment_Bill_No(cls : "Bill_") -> None:
