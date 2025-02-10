@@ -272,10 +272,14 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setItem(row, column, temp)  # type:ignore
 
     def setCellTracking(self, mode: bool) -> None:
-        if not mode:
-            self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  # type:ignore
-            return
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
+        try:
+            if not mode:
+                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  # type:ignore
+                return
+            self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
+        
+        except TypeError:
+            print(f"The Cell Tracking mode is already set to {mode}.")
 
     def getText(self, row: int, column: int, dtype : type = str) -> str:
         data = self.Bill_Table.item(row, column)  # type:ignore
@@ -294,10 +298,7 @@ class BMS_Home_GUI(QMainWindow):
                 try:
                     Item_ID = self.getText(row, BillTableColumn.Id, int)
                     if Bill.contains(Item_ID):
-                        try:
-                            self.setCellTracking(False)
-                        except:
-                            pass
+                        self.setCellTracking(False)
                         self.setBillColumn(row, BillTableColumn.Id, Item_ID)
                 except:  # Convertion Error (str -> int)
                     if (
@@ -340,10 +341,7 @@ class BMS_Home_GUI(QMainWindow):
 
                     if data is not None:
                         if Item_ID in bill_data.keys():  # Deals with duplicate entries
-                            try:
-                                self.setCellTracking(False)
-                            except:
-                                pass
+                            self.setCellTracking(False)
                             if row != bill_data[Item_ID]:
                                 self.setBillColumn(row, BillTableColumn.Id)
                                 self.setBillColumn(row, 0)
@@ -479,11 +477,7 @@ class BMS_Home_GUI(QMainWindow):
                     self.setBillColumn(row, BillTableColumn.Price, round((Price - Disc_Price), 2))
                     self.setCellTracking(True)
                 except:
-                    try:
-                        self.setCellTracking(True)
-                        pass
-                    except:
-                        pass
+                    self.setCellTracking(True)
             elif col == BillTableColumn.Name:  # Change in Name column
                 try:
                     self.setCellTracking(False)
@@ -498,20 +492,13 @@ class BMS_Home_GUI(QMainWindow):
                         self.setBillColumn(row, BillTableColumn.Qnty, 1)
                 except:
                     pass
-                try:
-                    self.setCellTracking(True)
-                except:
-                    pass
+                self.setCellTracking(True)
 
             try:  # Net Totals and discounts calculation
                 self.CalcTotal()
                 self.setCellTracking(True)
             except:
-                try:
-                    self.setCellTracking(True)
-                    pass
-                except:
-                    pass
+                self.setCellTracking(True)
 
     def CalcTotal(self):
         global total
@@ -521,10 +508,7 @@ class BMS_Home_GUI(QMainWindow):
         dsc_list: list[int | float] = []
         qnty_list: list[int] = []
         try:
-            try:
-                self.setCellTracking(False)
-            except:
-                pass
+            self.setCellTracking(False)
             for key in bill_data.keys():
                 try:
                     total += self.getText(bill_data[key], BillTableColumn.Price, float)
