@@ -51,7 +51,7 @@ class User:
         
 class Bill_:
     __Bill_No_Gen :Generator
-    __Bill_No :int
+    __Bill_No :int = int()
     __Items :dict = dict()
     __Cart :dict = dict()
     __Row_Lookup :dict = dict()
