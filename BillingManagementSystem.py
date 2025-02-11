@@ -300,7 +300,7 @@ class BMS_Home_GUI(QMainWindow):
                     if Bill.contains(Item_ID):
                         self.setCellTracking(False)
                         self.setBillColumn(row, BillTableColumn.Id, Item_ID)
-                except:  # Convertion Error (str -> int)
+                except ValueError:  # Convertion Error (str -> int)
                     if (
                         self.Bill_Table.item(row, BillTableColumn.Id).text() == ""  # type:ignore
                         or self.Bill_Table.item(row, BillTableColumn.Id).text()  # type:ignore
