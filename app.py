@@ -45,7 +45,7 @@ def authenticate(user_id: str, password: str):
         return jsonify(result), 200
     return jsonify(None)
 
-@app.route("//get_items", methods=['GET'])
+@app.route("/get_items", methods=['GET'])
 def get_items():
     res = items_table.find({}, {'_id': False, 'added': False, 'cp': False, 'qnty': False})
     items = []
@@ -70,3 +70,16 @@ def get_latest_bill_no():
     for bill_no in bill:
         no = bill_no.get('bill_no', None)
     return jsonify(no)
+
+@app.route("/help", methods = ['GET'])
+def helper_function():
+    return jsonify(
+        {'/items/<int:item_id>' :  'methods=["GET"]',
+        '/authenticate/<string:user_id>/<string:password>' : "methods=['GET']",
+        "/get_items" : "methods=['GET']",
+        "/connected" : None,
+        '/bills': "methods = ['POST']",
+        '/getLastBillNo' : "methods = ['GET']",
+        "/help" : "methods = ['GET']",
+        }
+    )

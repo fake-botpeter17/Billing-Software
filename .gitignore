@@ -27,3 +27,5 @@ queryFormat_custom.py
 queryFormat.py
 utils.py
 .gitignore
+auto.py
+BillingManagementSystem_Temp.py
