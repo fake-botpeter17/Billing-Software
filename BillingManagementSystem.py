@@ -319,6 +319,7 @@ class BMS_Home_GUI(QMainWindow):
     Net_Discount_Label :QLabel
     Total_Label :QLabel
     Net_Total_Label :QLabel
+    Update_Stock :QMenu
 
     def __init__(self):
         """
@@ -342,6 +343,10 @@ class BMS_Home_GUI(QMainWindow):
         self.show()
         self.setup()
         press("tab")
+    
+    def updateStock(self):
+        from query_format_advanced import main
+        Thread(target=main).start()
 
     def setup(self, init: bool = False):
         global Bill_No
@@ -360,6 +365,7 @@ class BMS_Home_GUI(QMainWindow):
         )
         self.actionLogout.triggered.connect(lambda: self.logout())  
         self.actionThemes.triggered.connect(lambda: self.setTheme())  
+        self.Update_Stock.triggered.connect(lambda: self.updateStock())
         self.Profile.triggered.connect(  
             lambda: Profile_(User)  # type:ignore
         )  # Should Change after defining Profile GUI
