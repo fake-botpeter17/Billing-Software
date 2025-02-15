@@ -13,6 +13,9 @@ from tkinter.filedialog import askopenfilename
 from collections.abc import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
+    QLabel,
+    QMenu,
+    QPushButton,
     QTableWidget,
     QMainWindow,
     QApplication,
@@ -301,6 +304,22 @@ Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill 
 
 
 class BMS_Home_GUI(QMainWindow):
+    menuSales :QMenu
+    menuStock :QMenu
+    New_Bill_Tab :QMenu
+    Bill_Number_Label :QLabel
+    Bill_Date_Label :QLabel
+    Billed_By_Label :QLabel
+    Bill_Time_Label :QLabel
+    actionLogout :QMenu
+    actionThemes :QMenu
+    Profile :QMenu
+    Bill_Table :QTableWidget
+    Print_Button :QPushButton
+    Net_Discount_Label :QLabel
+    Total_Label :QLabel
+    Net_Total_Label :QLabel
+
     def __init__(self):
         """
         Should Set the Column width from code appropriately
@@ -308,7 +327,7 @@ class BMS_Home_GUI(QMainWindow):
         global Bill_No
         Bill_No = next(Bill_No_Gen)
         super(BMS_Home_GUI, self).__init__()
-        uic.loadUi("BMS_Home_GUI.ui", self)  # type:ignore
+        uic.loadUi("BMS_Home_GUI.ui", self)  
         aspect_ratio = 16 / 9  # aspect ratio
         min_height = 900
         min_width = int(min_height * aspect_ratio)
@@ -317,9 +336,9 @@ class BMS_Home_GUI(QMainWindow):
         icon = QIcon("My_Icon.ico")
         self.setWindowIcon(icon)
         if User.isAdmin():
-            self.menuSales.setEnabled(True)  # type:ignore
-            self.menuStock.setEnabled(True)  # type:ignore
-            self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit # type:ignore
+            self.menuSales.setEnabled(True)  
+            self.menuStock.setEnabled(True)  
+            self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit 
         self.show()
         self.setup()
         press("tab")
@@ -327,36 +346,36 @@ class BMS_Home_GUI(QMainWindow):
     def setup(self, init: bool = False):
         global Bill_No
         self.setTheme("Resources/Default.qss")
-        self.Bill_Number_Label.setText(  # type:ignore
+        self.Bill_Number_Label.setText(  
             "Bill No    : {}".format([Bill_No if not init else next(Bill_No_Gen)][0])
         )
-        self.Bill_Date_Label.setText(  # type:ignore
+        self.Bill_Date_Label.setText(  
             "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
         )
-        self.Billed_By_Label.setText(  # type:ignore
+        self.Billed_By_Label.setText(  
             "Billed By : {} ({})".format(*User.getNameDesignation())
         )
-        self.Bill_Time_Label.setText(  # type:ignore
-            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
+        self.Bill_Time_Label.setText(  
+            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S")) 
         )
-        self.actionLogout.triggered.connect(lambda: self.logout())  # type:ignore
-        self.actionThemes.triggered.connect(lambda: self.setTheme())  # type:ignore
-        self.Profile.triggered.connect(  # type:ignore
+        self.actionLogout.triggered.connect(lambda: self.logout())  
+        self.actionThemes.triggered.connect(lambda: self.setTheme())  
+        self.Profile.triggered.connect(  
             lambda: Profile_(User)  # type:ignore
         )  # Should Change after defining Profile GUI
-        self.Bill_Table.setColumnCount(8)  # type:ignore
-        self.Bill_Table.setRowCount(26)  # type:ignore
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
-        self.Print_Button.clicked.connect(self.log_bill)  # type:ignore
+        self.Bill_Table.setColumnCount(8)  
+        self.Bill_Table.setRowCount(26)  
+        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  
+        self.Print_Button.clicked.connect(self.log_bill)  
         # Setting Column Widths
         # Didn't define the width of price col to allow resizing
-        self.Bill_Table.setColumnWidth(0, 100)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Id, 150)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Name, 350)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Rate, 150)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Qnty, 150)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Disc_prcnt, 175)  # type:ignore
-        self.Bill_Table.setColumnWidth(BillTableColumn.Disc, 175)  # type:ignore
+        self.Bill_Table.setColumnWidth(0, 100)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Id, 150)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Name, 350)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Rate, 150)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Qnty, 150)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Disc_prcnt, 175)  
+        self.Bill_Table.setColumnWidth(BillTableColumn.Disc, 175)  
 
     def closeEvent(self, event):
         if User.isLoggingOut():
@@ -385,7 +404,7 @@ class BMS_Home_GUI(QMainWindow):
         except:
             pass
         try:
-            with open(path) as f:  # type:ignore
+            with open(path) as f:
                 stylesheet = f.read()
                 self.setStyleSheet(stylesheet)
         except:
@@ -394,16 +413,16 @@ class BMS_Home_GUI(QMainWindow):
     def setBillColumn(self, row: int, column: int, value: str | int | float = ""):
         temp = QTableWidgetItem(str(value))
         temp.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.Bill_Table.setItem(row, column, temp)  # type:ignore
+        self.Bill_Table.setItem(row, column, temp)  
 
     def setCellTracking(self, mode: bool) -> None:
         if not mode:
-            self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  # type:ignore
+            self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  
             return
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
+        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  
 
     def getText(self, row: int, column: int) -> str:
-        data = self.Bill_Table.item(row, column)  # type:ignore
+        data = self.Bill_Table.item(row, column)  
         if data:
             return data.text()
         return ""
@@ -415,7 +434,7 @@ class BMS_Home_GUI(QMainWindow):
     def handle_cell_change(self, row, col):
         if row is not None:
             global bill_data
-            if col == BillTableColumn.Id:  # Change in ID Column
+            if col == BillTableColumn.Id:  
                 self.setCellTracking(False)
                 try:
                     s = self.getText(row, BillTableColumn.Id)
@@ -429,8 +448,8 @@ class BMS_Home_GUI(QMainWindow):
                         self.setBillColumn(row, BillTableColumn.Id, Item_ID)
                 except:  # Convertion Error (str -> int)
                     if (
-                        self.Bill_Table.item(row, BillTableColumn.Id).text() == ""  # type:ignore
-                        or self.Bill_Table.item(row, BillTableColumn.Id).text()  # type:ignore
+                        self.Bill_Table.item(row, BillTableColumn.Id).text() == ""  
+                        or self.Bill_Table.item(row, BillTableColumn.Id).text()  
                         == None
                     ):
                         self.resetRow(row)
@@ -440,7 +459,7 @@ class BMS_Home_GUI(QMainWindow):
                                 ind = tmp.index(row)
                                 del bill_data[
                                     list(bill_data.keys())[ind]
-                                ]  # type:ignore
+                                ]  
                                 self.CalcTotal()
                         return
 
@@ -671,17 +690,17 @@ class BMS_Home_GUI(QMainWindow):
 
         except:
             pass
-        self.Net_Discount_Label.setText(  # type:ignore
+        self.Net_Discount_Label.setText(  
             "Net Discount    : " + str(round(discount, 2))
         )
-        net_total = round(total + discount, 2)  # type:ignore
-        self.Total_Label.setText(  # type:ignore
+        net_total = round(total + discount, 2)  
+        self.Total_Label.setText(  
             "Total                 : " + str(round(total, 2))
         )
-        self.Net_Total_Label.setText(  # type:ignore
+        self.Net_Total_Label.setText(  
             "Net Total          : " + str(net_total)
         )
-        self.Bill_Time_Label.setText(  # type:ignore
+        self.Bill_Time_Label.setText(  
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
         )
         return {
@@ -807,9 +826,9 @@ class BMS_Home_GUI(QMainWindow):
         reply = confirmation_dialog.exec()
         if reply == QMessageBox.StandardButton.Yes:
             User.toggleLoggingOut()
-            self.menuSales.setEnabled(False)  # type:ignore
-            self.menuStock.setEnabled(False)  # type:ignore
-            self.New_Bill_Tab.setEnabled(False)  # type:ignore
+            self.menuSales.setEnabled(False)  
+            self.menuStock.setEnabled(False)  
+            self.New_Bill_Tab.setEnabled(False)  
             information_dialog = QMessageBox()
             information_dialog.setWindowTitle("Success!")
             information_dialog.setText("Logged out successfully!")
