@@ -53,6 +53,14 @@ def get_items():
         items.append(item)
     return jsonify(items)
 
+@app.route("/get_stock", methods=['GET'])
+def get_items():
+    res = items_table.find({}, {'_id': False, 'added': False})
+    items = []
+    for item in res:
+        items.append(item)
+    return jsonify(items)
+
 @app.route("/connected")
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
@@ -81,5 +89,6 @@ def helper_function():
         '/bills': "methods = ['POST']",
         '/getLastBillNo' : "methods = ['GET']",
         "/help" : "methods = ['GET']",
+        "/get_stock" : "methods=['GET']",
         }
     )
