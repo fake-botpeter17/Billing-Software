@@ -574,8 +574,9 @@
      <property name="title">
       <string>Stock</string>
      </property>
-     <addaction name="Stock_Menu"/>
-     <addaction name="Sales_Menu"/>
+     <addaction name="View_Stock"/>
+     <addaction name="Update_Stock"/>
+     <addaction name="New_Stock"/>
     </widget>
     <widget class="QMenu" name="menuSales">
      <property name="enabled">
@@ -608,14 +609,19 @@
     <string>Profile</string>
    </property>
   </action>
-  <action name="Stock_Menu">
+  <action name="View_Stock">
    <property name="text">
     <string>View Stock</string>
    </property>
   </action>
-  <action name="Sales_Menu">
+  <action name="Update_Stock">
    <property name="text">
     <string>Update Stock</string>
+   </property>
+  </action>
+  <action name="New_Stock">
+   <property name="text">
+    <string>New Stock</string>
    </property>
   </action>
   <action name="actionToday_s_Sales">
