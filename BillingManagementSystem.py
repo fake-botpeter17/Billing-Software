@@ -2,6 +2,7 @@
 import string
 from os import path
 from threading import Thread
+from enum import StrEnum, auto
 from typing import LiteralString
 from requests import post
 from win32api import ShellExecute
@@ -24,7 +25,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QIcon
 from PyQt6 import uic
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from urllib.request import Request, urlopen
 from json import dumps, loads
 from datetime import datetime, date
@@ -302,6 +303,21 @@ def Auth(user: str, pwd: str) -> None:
 
 Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
 
+class WorkerThread(QThread):
+    updateStock = pyqtSignal()
+
+    def __init__(self, window_name):
+        super().__init__()
+        self.window_name = window_name
+
+    def run(self):
+        if self.window_name == WindowNames.UpdateStock:
+            self.updateStock.emit()
+
+
+class WindowNames(StrEnum):
+    UpdateStock = auto()
+
 
 class BMS_Home_GUI(QMainWindow):
     menuSales :QMenu
@@ -343,10 +359,18 @@ class BMS_Home_GUI(QMainWindow):
         self.show()
         self.setup()
         press("tab")
-    
+
+    def startThread(self, window_name):
+        self.worker = WorkerThread(window_name)  #Thread Initialization
+        # Connection signals to Different Windows
+        self.worker.updateStock.connect(self.updateStock)
+        #Starting the Thread
+        self.worker.run()
+
     def updateStock(self):
-        from query_format_advanced import main
-        Thread(target=main).start()
+        from query_format_advanced import QueryFormatterGUI
+        self.queryFormatter = QueryFormatterGUI()
+        self.queryFormatter.showMaximized()
 
     def setup(self, init: bool = False):
         global Bill_No
@@ -365,7 +389,7 @@ class BMS_Home_GUI(QMainWindow):
         )
         self.actionLogout.triggered.connect(lambda: self.logout())  
         self.actionThemes.triggered.connect(lambda: self.setTheme())  
-        self.Update_Stock.triggered.connect(lambda: self.updateStock())
+        self.Update_Stock.triggered.connect(lambda: self.startThread(WindowNames.UpdateStock)) 
         self.Profile.triggered.connect(  
             lambda: Profile_(User)  # type:ignore
         )  # Should Change after defining Profile GUI
