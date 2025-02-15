@@ -17,6 +17,14 @@ class BillTableColumn(IntEnum):
     Disc = 6
     Price = 7
 
+class QueryFormatterColumn(IntEnum):
+    """Query Formatter Table Column Position"""
+    Sno = 0
+    Id = 1
+    Name = 2
+    CostPrice = 3
+    SellingPrice = 4
+    Qnty = 5
 
 if __name__ == '__main__':
     pass
