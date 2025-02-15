@@ -54,7 +54,7 @@ def get_items():
     return jsonify(items)
 
 @app.route("/get_stock", methods=['GET'])
-def get_items():
+def getStock():
     res = items_table.find({}, {'_id': False, 'added': False})
     items = []
     for item in res:
