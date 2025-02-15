@@ -29,3 +29,5 @@ queryFormat_custom.py
 utils.py
 BillingManagementSystem_Temp.py
 auto.py
+query_format_advanced.py
+Resources/Query_Formatter.ui
