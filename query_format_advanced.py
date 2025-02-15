@@ -186,7 +186,7 @@ class QueryFormatterGUI(QMainWindow):
         self.setCellTracking(False)
         print(stock[120])
         for row, item_id in enumerate(stock): #Item=> ID : Obj
-            item = stock[item_id]
+            item :dict = stock[item_id]
             self.setBillColumn(row, QueryFormatterColumn.Sno, row + 1)
             self.setBillColumn(row, QueryFormatterColumn.Id, item.get('id'))
             self.setBillColumn(row, QueryFormatterColumn.Name, item.get('name'))

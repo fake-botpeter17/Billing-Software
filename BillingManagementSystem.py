@@ -258,7 +258,6 @@ class BMS_Home_GUI(QMainWindow):
         self.stockViewer.showMaximized()
         
     def setup(self, init: bool = False):
-        global Bill_No
         self.setTheme("Resources/Default.qss")
         self.Bill_Number_Label.setText(  # type:ignore
             "Bill No    : {}".format(Bill.Get_Bill_No())

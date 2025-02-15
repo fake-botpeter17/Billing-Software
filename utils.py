@@ -56,9 +56,19 @@ class Bill_:
     __Cart :dict = dict()
     __Row_Lookup :dict = dict()
 
-    @classmethod
-    def getItems(cls):
-        raise NotImplementedError
+    @staticmethod
+    def getItems():
+        try:
+            req : Response= get(get_Api(testing=False) + "//get_stock", timeout=15)
+            items_cache = req.json()
+        except Timeout:
+            return
+        if not items_cache:
+            return {}
+        tmp = dict()
+        for item in items_cache:
+            tmp[item["id"]] = item
+        return tmp
 
     @classmethod
     def contains(cls, item_id: int) -> bool:
