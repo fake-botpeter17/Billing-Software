@@ -69,7 +69,7 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
+              <!-- <item row="1" column="0">
                <layout class="QGridLayout" name="gridLayout_2">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout">
@@ -170,7 +170,7 @@
                  </layout>
                 </item>
                </layout>
-              </item>
+              </item> -->
              </layout>
             </item>
             <item row="0" column="1">
@@ -214,169 +214,144 @@
              </spacer>
             </item>
             <item row="0" column="1">
-             <widget class="QTableWidget" name="Bill_Table">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>610</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <family>Times New Roman</family>
-                <pointsize>16</pointsize>
-                <kerning>false</kerning>
-               </font>
-              </property>
-              <property name="verticalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOff</enum>
-              </property>
-              <property name="horizontalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOff</enum>
-              </property>
-              <property name="sizeAdjustPolicy">
-               <enum>QAbstractScrollArea::AdjustToContents</enum>
-              </property>
-              <property name="showGrid">
-               <bool>true</bool>
-              </property>
-              <property name="gridStyle">
-               <enum>Qt::NoPen</enum>
-              </property>
-              <attribute name="horizontalHeaderVisible">
-               <bool>true</bool>
-              </attribute>
-              <attribute name="horizontalHeaderCascadingSectionResizes">
-               <bool>true</bool>
-              </attribute>
-              <attribute name="horizontalHeaderDefaultSectionSize">
-               <number>128</number>
-              </attribute>
-              <attribute name="horizontalHeaderStretchLastSection">
-               <bool>true</bool>
-              </attribute>
-              <attribute name="verticalHeaderVisible">
-               <bool>false</bool>
-              </attribute>
-              <attribute name="verticalHeaderCascadingSectionResizes">
-               <bool>true</bool>
-              </attribute>
-              <column>
-               <property name="text">
-                <string>S.No.</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <stylestrategy>PreferAntialias</stylestrategy>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-               <property name="foreground">
-                <brush brushstyle="SolidPattern">
-                 <color alpha="255">
-                  <red>0</red>
-                  <green>0</green>
-                  <blue>0</blue>
-                 </color>
-                </brush>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Item ID</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>true</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Item Name </string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Rate</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Quantity</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Discount (%)</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Discount (Rs.)</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Price (Rs.)</string>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Times New Roman</family>
-                 <pointsize>16</pointsize>
-                 <bold>true</bold>
-                 <kerning>false</kerning>
-                </font>
-               </property>
-              </column>
-             </widget>
+                <widget class="QTableWidget" name="Bill_Table">
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>610</height>
+                        </size>
+                    </property>
+                    <property name="font">
+                        <font>
+                            <family>Times New Roman</family>
+                            <pointsize>16</pointsize>
+                            <kerning>false</kerning>
+                        </font>
+                    </property>
+                    <property name="verticalScrollBarPolicy">
+                        <enum>Qt::ScrollBarAlwaysOff</enum>
+                    </property>
+                    <property name="horizontalScrollBarPolicy">
+                        <enum>Qt::ScrollBarAlwaysOff</enum>
+                    </property>
+                    <property name="sizeAdjustPolicy">
+                        <enum>QAbstractScrollArea::AdjustToContents</enum>
+                    </property>
+                    <property name="showGrid">
+                        <bool>true</bool>
+                    </property>
+                    <property name="gridStyle">
+                        <enum>Qt::NoPen</enum>
+                    </property>
+                    <attribute name="horizontalHeaderVisible">
+                        <bool>true</bool>
+                    </attribute>
+                    <attribute name="horizontalHeaderCascadingSectionResizes">
+                        <bool>true</bool>
+                    </attribute>
+                    <attribute name="horizontalHeaderDefaultSectionSize">
+                        <number>128</number>
+                    </attribute>
+                    <attribute name="horizontalHeaderStretchLastSection">
+                        <bool>true</bool>
+                    </attribute>
+                    <attribute name="verticalHeaderVisible">
+                        <bool>false</bool>
+                    </attribute>
+                    <attribute name="verticalHeaderCascadingSectionResizes">
+                        <bool>true</bool>
+                    </attribute>
+                    <column>
+                        <property name="text">
+                            <string>S.No.</string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <stylestrategy>PreferAntialias</stylestrategy>
+                                <kerning>false</kerning>
+                            </font>
+                        </property>
+                        <property name="foreground">
+                            <brush brushstyle="SolidPattern">
+                                <color alpha="255">
+                                    <red>0</red>
+                                    <green>0</green>
+                                    <blue>0</blue>
+                                </color>
+                            </brush>
+                        </property>
+                    </column>
+                    <column>
+                        <property name="text">  <!-- Item ID-->
+                            <string>Item ID</string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <kerning>true</kerning>
+                            </font>
+                        </property>
+                    </column>
+                    <column>
+                        <property name="text">      <!--Item Name-->
+                            <string>Item Name </string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <kerning>false</kerning>
+                            </font>
+                        </property>
+                    </column>
+                    <column>
+                        <property name="text">
+                            <string>Cost Price</string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <kerning>false</kerning>
+                            </font>
+                        </property>
+                    </column>
+                    <column>
+                        <property name="text">
+                            <string>Selling Price</string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <kerning>false</kerning>
+                            </font>
+                        </property>
+                    </column>
+                    <column>
+                        <property name="text">
+                            <string>Quantity</string>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Times New Roman</family>
+                                <pointsize>16</pointsize>
+                                <bold>true</bold>
+                                <kerning>false</kerning>
+                            </font>
+                        </property>
+                    </column>
+                </widget>
             </item>
+
            </layout>
           </item>
           <item row="0" column="1">
@@ -415,7 +390,7 @@
                  </spacer>
                 </item>
                 <item row="4" column="0">
-                 <widget class="QPushButton" name="Print_Button">
+                 <widget class="QPushButton" name="Query_Button">
                   <property name="font">
                    <font>
                     <family>Times New Roman</family>
@@ -424,7 +399,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Print Bill</string>
+                   <string>Get Query</string>
                   </property>
                   <property name="icon">
                    <iconset theme="printer"/>
@@ -574,9 +549,8 @@
      <property name="title">
       <string>Stock</string>
      </property>
-     <addaction name="View_Stock"/>
-     <addaction name="Update_Stock"/>
-     <addaction name="New_Stock"/>
+     <addaction name="Stock_Menu"/>
+     <addaction name="Sales_Menu"/>
     </widget>
     <widget class="QMenu" name="menuSales">
      <property name="enabled">
@@ -609,19 +583,14 @@
     <string>Profile</string>
    </property>
   </action>
-  <action name="View_Stock">
+  <action name="Stock_Menu">
    <property name="text">
     <string>View Stock</string>
    </property>
   </action>
-  <action name="Update_Stock">
+  <action name="Sales_Menu">
    <property name="text">
     <string>Update Stock</string>
-   </property>
-  </action>
-  <action name="New_Stock">
-   <property name="text">
-    <string>New Stock</string>
    </property>
   </action>
   <action name="actionToday_s_Sales">
