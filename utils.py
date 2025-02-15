@@ -57,6 +57,10 @@ class Bill_:
     __Row_Lookup :dict = dict()
 
     @classmethod
+    def getItems(cls):
+        raise NotImplementedError
+
+    @classmethod
     def contains(cls, item_id: int) -> bool:
         """Checks if the given item ID is in the cart"""
         return item_id in cls.__Cart

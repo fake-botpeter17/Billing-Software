@@ -1,5 +1,9 @@
+import enum
+from random import choice
+from typing import Iterable
 from PyQt6 import uic
 from PyQt6.QtWidgets import (
+    QMenu,
     QPushButton,
     QTableWidget,
     QMainWindow,
@@ -31,6 +35,7 @@ class Item:
 class QueryFormatterGUI(QMainWindow):
     Bill_Table : QTableWidget
     Query_Button :QPushButton
+    Profile :QMenu
     def __init__(self) -> None:
         self.coordinates: tuple[int,int] = (0,0)
         self.rowManager :dict[int, Item] = dict()
@@ -44,6 +49,7 @@ class QueryFormatterGUI(QMainWindow):
         self.setWindowTitle(f"Query Formatter")
         icon = QIcon("icofi.ico")
         self.setWindowIcon(icon)
+        self.Profile.triggered.connect(self.loadStock)
         self.notification = Notify(
             default_notification_title="Query Formatter",
             default_notification_icon="Resources/icofi.ico",
@@ -60,7 +66,7 @@ class QueryFormatterGUI(QMainWindow):
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
         self.Query_Button.clicked.connect(self.getQuery)
 
-        self.Bill_Table.setColumnWidth(0, 100)  
+        self.Bill_Table.setColumnWidth(QueryFormatterColumn.Sno, 100)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.Id, 150)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.Name, 450)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.CostPrice, 250)  
@@ -170,7 +176,24 @@ class QueryFormatterGUI(QMainWindow):
                 return
             self.rowManager[row].qnty = Quantity
             press(['tab']*2) 
-            self.coordinates = row + 1, QueryFormatterColumn.Id       
+            self.coordinates = row + 1, QueryFormatterColumn.Id   
+    
+    def loadStock(self, stock :Iterable):
+        self.Bill_Table.setColumnHidden(QueryFormatterColumn.CostPrice, True)
+        s = len(stock)
+        self.Bill_Table.setRowCount(s)
+        self.Bill_Table.setColumnCount(6)
+        self.setCellTracking(False)
+        print(stock[120])
+        for row, item_id in enumerate(stock): #Item=> ID : Obj
+            item = stock[item_id]
+            self.setBillColumn(row, QueryFormatterColumn.Sno, row + 1)
+            self.setBillColumn(row, QueryFormatterColumn.Id, item.get('id'))
+            self.setBillColumn(row, QueryFormatterColumn.Name, item.get('name'))
+            self.setBillColumn(row, QueryFormatterColumn.CostPrice, item.get('cp'))
+            self.setBillColumn(row, QueryFormatterColumn.SellingPrice, item.get('sp'))
+            self.setBillColumn(row, QueryFormatterColumn.Qnty, item.get('qnty'))
+
 
 
 def main():

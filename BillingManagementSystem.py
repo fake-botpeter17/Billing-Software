@@ -178,37 +178,24 @@ def Auth(user: str, pwd: str) -> None:
             title="Authentication Error!", message="Wrong Username or Password"
         )
 
-# Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
-
 class WorkerThread(QThread):
     updateStock = pyqtSignal()
+    viewStock = pyqtSignal()
 
     def __init__(self, window_name):
         super().__init__()
         self.window_name = window_name
 
     def run(self):
-        if self.window_name == WindowNames.UpdateStock:
+        if self.window_name == WindowName.UpdateStock:
             self.updateStock.emit()
+        elif self.window_name == WindowName.ViewStock:
+            self.viewStock.emit()
 
 
-class WindowNames(StrEnum):
+class WindowName(StrEnum):
     UpdateStock = auto()
-
-class WorkerThread(QThread):
-    updateStock = pyqtSignal()
-
-    def __init__(self, window_name):
-        super().__init__()
-        self.window_name = window_name
-
-    def run(self):
-        if self.window_name == WindowNames.UpdateStock:
-            self.updateStock.emit()
-
-
-class WindowNames(StrEnum):
-    UpdateStock = auto()
+    ViewStock = auto()
 
 
 class BMS_Home_GUI(QMainWindow):
@@ -228,6 +215,7 @@ class BMS_Home_GUI(QMainWindow):
     Total_Label :QLabel
     Net_Total_Label :QLabel
     Update_Stock :QMenu
+    View_Stock :QMenu
 
     def __init__(self):
         """
@@ -254,6 +242,7 @@ class BMS_Home_GUI(QMainWindow):
         self.worker = WorkerThread(window_name)  #Thread Initialization
         # Connection signals to Different Windows
         self.worker.updateStock.connect(self.updateStock)
+        self.worker.viewStock.connect(self.viewStock)
         #Starting the Thread
         self.worker.run()
 
@@ -262,6 +251,12 @@ class BMS_Home_GUI(QMainWindow):
         self.queryFormatter = QueryFormatterGUI()
         self.queryFormatter.showMaximized()
 
+    def viewStock(self):
+        from query_format_advanced import QueryFormatterGUI
+        self.stockViewer = QueryFormatterGUI()
+        self.stockViewer.loadStock(Bill.getItems())
+        self.stockViewer.showMaximized()
+        
     def setup(self, init: bool = False):
         global Bill_No
         self.setTheme("Resources/Default.qss")
@@ -279,7 +274,8 @@ class BMS_Home_GUI(QMainWindow):
         )
         self.actionLogout.triggered.connect(lambda: self.logout())  
         self.actionThemes.triggered.connect(lambda: self.setTheme())  
-        self.Update_Stock.triggered.connect(lambda: self.startThread(WindowNames.UpdateStock)) 
+        self.Update_Stock.triggered.connect(lambda: self.startThread(WindowName.UpdateStock)) 
+        self.View_Stock.triggered.connect(lambda: self.startThread(WindowName.ViewStock))
         self.Profile.triggered.connect(  
             lambda: Profile_(User)  # type:ignore
         )  # Should Change after defining Profile GUI
