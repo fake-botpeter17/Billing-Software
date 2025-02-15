@@ -30,119 +30,18 @@ from urllib.request import Request, urlopen
 from json import dumps, loads
 from datetime import datetime, date
 from sys import exit as exi
+# Custom Imports
 from qt_helper import BillTableColumn
+from utils import User
+from utils import Bill_ as Bill
+from api import get_Api
 
 DIREC = Path(__file__).resolve().parent
 
 #Importing Punctuations for Password Validation
 punc : LiteralString = string.punctuation
 
-class User:
-    __Name :str = str()
-    __Designation :str = str()
-    __UID :str = str()
-    __Logging_Out :bool = False
-
-    @classmethod
-    def update(cls  : "User", uid : str, **kwargs : dict[str, str]) -> None:
-        """Sets the current user info"""
-        cls.__Name :str = kwargs.get("name")
-        cls.__Designation :str = kwargs.get("designation")
-        cls.__UID :str = uid
-
-    @classmethod
-    def getNameDesignation(cls : "User") -> tuple[str, str]:
-        return cls.__Name, cls.__Designation
-
-    @classmethod
-    def isAdmin(cls : "User") -> bool:
-        '''Checks if the current user is an Admin'''
-        return cls.__Designation.casefold() == "Admin".casefold()
-
-    @classmethod
-    def isLoggingOut(cls : "User") -> bool:
-        return cls.__Logging_Out
-    
-    @classmethod
-    def toggleLoggingOut(cls : "User") -> None:
-        cls.__Logging_Out = True
-        cls.resetUser()
-
-    @classmethod
-    def resetUser(cls : "User") -> None:
-        cls.__Name :str = str()
-        cls.__Designation :str = str()
-        cls.__UID :str = str()
-
-class Bill_:
-    __Bill_No_Gen :Generator
-    __Bill_No :int
-    __Items :dict = dict()
-    __Cart :dict = dict()
-
-    @staticmethod
-    def __Bill_Number() -> Generator:
-        """Retreives the latest Bill Number"""
-        req :str = f"{url}/getLastBillNo"
-        with urlopen(Request(req)) as res:
-            Latest_Bill : int | None = loads(res.read().decode())
-        if not Latest_Bill:
-            Latest_Bill = 10001
-        for Bill_Number in range(Latest_Bill + 1, 100000):
-            yield Bill_Number
-
-    @classmethod
-    def Init(cls : "Bill_") -> None:
-        cls.__Bill_No_Gen = cls.__Bill_Number()
-        cls.__Bill_No = next(cls.__Bill_No_Gen)
-        Cacher = Thread(target=cls.Items_Cacher)
-        Cacher.start()
-
-    @classmethod
-    def Get_Bill_No(cls : "Bill_") -> int:
-        return cls.__Bill_No
-
-    @staticmethod
-    def Get_Date() -> str:
-        """Returns the current date."""
-        return date.today().strftime("%B %d, %Y")
-
-    @staticmethod
-    def Get_Time() -> str:
-        """Returns the current time."""
-        return datetime.now().time().strftime("%H:%M:%S")
-    
-    @classmethod
-    def Increment_Bill_No(cls : "Bill_") -> None:
-        cls.__Bill_No = next(cls.__Bill_No_Gen)
-
-    @classmethod
-    def Items_Cacher(cls : "Bill_") -> None:
-        req = Request(url + "//get_items")
-        with urlopen(req, timeout=15) as response:
-            items_cache = loads(response.read().decode())
-        if not items_cache:
-            return
-        for item in items_cache:
-            cls.__Items[item["id"]] = item
-
-# Global Variables
-bill_data = dict()  # Stores data as {Item_ID : Row} Acts as temp for Current Bill items
-Bill_No = int()
-items_cache = {}
-
-def get_Api(testing: bool = False) -> str:
-    """Returns the API URL for the server"""
-    if testing:
-        return "http://127.0.0.1:5000"
-    from pickle import load
-
-    with open("Resources\\sak.dat", "rb") as file:
-        return load(file).decode("utf-32")
-
-
 url: str = get_Api()
-
 
 def Init() -> None:
     try:
@@ -158,34 +57,12 @@ def Init() -> None:
     Login()
 
 
-def Items_Cacher():
-    global items_cache
-    req = Request(url + "//get_items")
-    with urlopen(req, timeout=15) as response:
-        items_cache_ = loads(response.read().decode())
-    for item in items_cache_:
-        items_cache[item["id"]] = item
-
-
 def main():
-    Cacher = Thread(target=Items_Cacher)
-    Cacher.start()
     global app
     app = QApplication([])
     window = BMS_Home_GUI()
     window.showMaximized()
     exi(app.exec())
-
-
-def Bill_Number() -> Generator:
-    # Get latest Bill No and save it to the below Variable
-    req = f"{url}/getLastBillNo"
-    with urlopen(Request(req)) as res:
-        Latest_Bill = loads(res.read().decode())
-    if Latest_Bill is None:
-        Latest_Bill = 10001
-    for Bill_Number in range(Latest_Bill + 1, 100000):
-        yield Bill_Number
 
 
 def Login() -> None:
@@ -285,7 +162,7 @@ def Auth(user: str, pwd: str) -> None:
     # Comparing Hashed Passwords
     if result is not None:
         User.update(uid=user, **result)
-        Bill_.Init()
+        Bill.Init()
         if User.isAdmin():
             messagebox.showinfo(
                 title="Login Successful!", message="You are now logged in as Admin."
@@ -301,7 +178,22 @@ def Auth(user: str, pwd: str) -> None:
             title="Authentication Error!", message="Wrong Username or Password"
         )
 
-Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
+# Bill_No_Gen: Generator = Bill_Number()  # Memory Efficient way to generate bill no. successively (Generator Object)
+
+class WorkerThread(QThread):
+    updateStock = pyqtSignal()
+
+    def __init__(self, window_name):
+        super().__init__()
+        self.window_name = window_name
+
+    def run(self):
+        if self.window_name == WindowNames.UpdateStock:
+            self.updateStock.emit()
+
+
+class WindowNames(StrEnum):
+    UpdateStock = auto()
 
 class WorkerThread(QThread):
     updateStock = pyqtSignal()
@@ -341,8 +233,6 @@ class BMS_Home_GUI(QMainWindow):
         """
         Should Set the Column width from code appropriately
         """
-        global Bill_No
-        Bill_No = next(Bill_No_Gen)
         super(BMS_Home_GUI, self).__init__()
         uic.loadUi("BMS_Home_GUI.ui", self)  
         aspect_ratio = 16 / 9  # aspect ratio
@@ -375,17 +265,17 @@ class BMS_Home_GUI(QMainWindow):
     def setup(self, init: bool = False):
         global Bill_No
         self.setTheme("Resources/Default.qss")
-        self.Bill_Number_Label.setText(  
-            "Bill No    : {}".format([Bill_No if not init else next(Bill_No_Gen)][0])
+        self.Bill_Number_Label.setText(  # type:ignore
+            "Bill No    : {}".format(Bill.Get_Bill_No())
         )
-        self.Bill_Date_Label.setText(  
-            "Bill Date : {}".format(date.today().strftime("%B %d, %Y"))
+        self.Bill_Date_Label.setText(  # type:ignore
+            "Bill Date : {}".format(Bill.Get_Date())
         )
         self.Billed_By_Label.setText(  
             "Billed By : {} ({})".format(*User.getNameDesignation())
         )
-        self.Bill_Time_Label.setText(  
-            "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S")) 
+        self.Bill_Time_Label.setText(  # type:ignore
+            "Bill Time : {}".format(Bill.Get_Time())
         )
         self.actionLogout.triggered.connect(lambda: self.logout())  
         self.actionThemes.triggered.connect(lambda: self.setTheme())  
@@ -446,15 +336,19 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Table.setItem(row, column, temp)  
 
     def setCellTracking(self, mode: bool) -> None:
-        if not mode:
-            self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  
-            return
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  
+        try:
+            if not mode:
+                self.Bill_Table.cellChanged.disconnect(self.handle_cell_change)  # type:ignore
+                return
+            self.Bill_Table.cellChanged.connect(self.handle_cell_change)  # type:ignore
+        
+        except TypeError:
+            print(f"The Cell Tracking mode is already set to {mode}.")
 
-    def getText(self, row: int, column: int) -> str:
-        data = self.Bill_Table.item(row, column)  
+    def getText(self, row: int, column: int, dtype : type = str) -> str:
+        data = self.Bill_Table.item(row, column)  # type:ignore
         if data:
-            return data.text()
+            return dtype(data.text())
         return ""
 
     def resetRow(self, row: int) -> None:
@@ -463,20 +357,14 @@ class BMS_Home_GUI(QMainWindow):
 
     def handle_cell_change(self, row, col):
         if row is not None:
-            global bill_data
-            if col == BillTableColumn.Id:  
+            if col == BillTableColumn.Id:  # Change in ID Column
                 self.setCellTracking(False)
                 try:
-                    s = self.getText(row, BillTableColumn.Id)
-                    Item_ID = int(s)
-                    del s
-                    if Item_ID not in bill_data:
-                        try:
-                            self.setCellTracking(False)
-                        except:
-                            pass
+                    Item_ID = self.getText(row, BillTableColumn.Id, int)
+                    if Bill.contains(Item_ID):
+                        self.setCellTracking(False)
                         self.setBillColumn(row, BillTableColumn.Id, Item_ID)
-                except:  # Convertion Error (str -> int)
+                except ValueError:  # Convertion Error (str -> int)
                     if (
                         self.Bill_Table.item(row, BillTableColumn.Id).text() == ""  
                         or self.Bill_Table.item(row, BillTableColumn.Id).text()  
@@ -484,13 +372,14 @@ class BMS_Home_GUI(QMainWindow):
                     ):
                         self.resetRow(row)
                         tmp: list = list(bill_data.values())
-                        if tmp is not None:
+                        if tmp is not None:         #TODO: Optimize
                             if row in tmp:
                                 ind = tmp.index(row)
                                 del bill_data[
                                     list(bill_data.keys())[ind]
                                 ]  
                                 self.CalcTotal()
+                        # Bill.remove_row_item(row)     #TODO: Implement
                         return
 
                 try:
@@ -516,20 +405,17 @@ class BMS_Home_GUI(QMainWindow):
 
                     if data is not None:
                         if Item_ID in bill_data.keys():  # Deals with duplicate entries
-                            try:
-                                self.setCellTracking(False)
-                            except:
-                                pass
+                            self.setCellTracking(False)
                             if row != bill_data[Item_ID]:
                                 self.setBillColumn(row, BillTableColumn.Id)
                                 self.setBillColumn(row, 0)
                             row = bill_data[Item_ID]
-                            qnty = int(self.getText(row, BillTableColumn.Qnty))
+                            qnty = self.getText(row, BillTableColumn.Qnty, int)
                             self.setBillColumn(row, BillTableColumn.Qnty, str(qnty + 1))
                             try:
-                                Quantity = int(self.getText(row, BillTableColumn.Qnty))
-                                Rate = int(self.getText(row, BillTableColumn.Rate))
-                                Disc_Prc = float(self.getText(row, BillTableColumn.Disc_prcnt))
+                                Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                                Rate = self.getText(row, BillTableColumn.Rate, int)
+                                Disc_Prc = self.getText(row, BillTableColumn.Disc_prcnt, float)
                                 Price = Quantity * Rate
                                 disc_amt = Price * Disc_Prc / 100
                                 self.setBillColumn(
@@ -560,11 +446,11 @@ class BMS_Home_GUI(QMainWindow):
                         ):  # Checking for duplicate entry(if duplicate...)
                             self.setBillColumn(row, BillTableColumn.Id)
                             row = bill_data[Item_ID]
-                            qnty = int(self.getText(row, BillTableColumn.Qnty))
+                            qnty = self.getText(row, BillTableColumn.Qnty, int)
                             self.setBillColumn(row, BillTableColumn.Qnty, qnty + 1)
                             try:
-                                Rate = int(self.getText(row, BillTableColumn.Rate))
-                                dis = float(self.getText(row, BillTableColumn.Disc_prcnt))
+                                Rate = self.getText(row, BillTableColumn.Rate, int)
+                                dis = self.getText(row, BillTableColumn.Disc_prcnt, float)
                                 p = (qnty + 1) * Rate
                                 Price = p * (1 - (dis / 100))
                                 self.setBillColumn(row, BillTableColumn.Disc, p - Price)
@@ -585,17 +471,17 @@ class BMS_Home_GUI(QMainWindow):
             elif col == BillTableColumn.Qnty:  # Change in Quantity Column
                 try:
                     self.setCellTracking(False)
-                    Quantity = int(self.getText(row, BillTableColumn.Qnty))
-                    Rate = int(self.getText(row, BillTableColumn.Rate))
+                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                    Rate = self.getText(row, BillTableColumn.Rate, int)
                     Price = Quantity * Rate
                     try:
-                        Discount_prct = float(self.getText(row, BillTableColumn.Disc_prcnt))
+                        Discount_prct = self.getText(row, BillTableColumn.Disc_prcnt, float)
                         Discount = Price * (Discount_prct / 100)
                         Net_Price = Price - Discount
                         self.setBillColumn(row, BillTableColumn.Price, Net_Price)
                         self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
                     except:
-                        Discount = int(self.getText(row, BillTableColumn.Disc))
+                        Discount = self.getText(row, BillTableColumn.Disc, int)
                         Net_Price = Price - Discount
                         self.setBillColumn(row, BillTableColumn.Price, Net_Price)
                         Discount_prct = Discount * 100 / Net_Price
@@ -610,12 +496,12 @@ class BMS_Home_GUI(QMainWindow):
                 try:
                     self.setCellTracking(False)
                     try:
-                        Discount_Percentage = float(self.getText(row, BillTableColumn.Disc_prcnt))
+                        Discount_Percentage = self.getText(row, BillTableColumn.Disc_prcnt, float)
                     except ValueError:
                         Discount_Percentage = 0
                         self.setBillColumn(row,col, 0)
-                    Quantity = int(self.getText(row, BillTableColumn.Qnty))
-                    Rate = int(self.getText(row, BillTableColumn.Rate))
+                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                    Rate = self.getText(row, BillTableColumn.Rate, int)
                     Price = Quantity * Rate
                     Discount = Price * (Discount_Percentage / 100)
                     Price_disc = Price - Discount
@@ -628,12 +514,12 @@ class BMS_Home_GUI(QMainWindow):
                 try:
                     self.setCellTracking(False)
                     try:
-                        Discount = int(self.getText(row, BillTableColumn.Disc))
+                        Discount = self.getText(row, BillTableColumn.Disc, int)
                     except ValueError:
                         Discount = 0
                         self.setBillColumn(row,col, 0)
-                    Quantity = int(self.getText(row, BillTableColumn.Qnty))
-                    Rate = int(self.getText(row, BillTableColumn.Rate))
+                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                    Rate = self.getText(row, BillTableColumn.Rate, int)
                     Price = Quantity * Rate
                     Price_disc = Price - Discount
                     self.setBillColumn(row, BillTableColumn.Price, Price_disc)
@@ -645,21 +531,17 @@ class BMS_Home_GUI(QMainWindow):
             elif col == BillTableColumn.Rate:  # Change in rate column
                 try:
                     self.setCellTracking(False)
-                    Rate = int(self.getText(row, BillTableColumn.Rate))
-                    Quantity = int(self.getText(row, BillTableColumn.Qnty))
+                    Rate = self.getText(row, BillTableColumn.Rate, int)
+                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
                     Price = Quantity * Rate
-                    Discount = int(self.getText(row, BillTableColumn.Disc_prcnt))
+                    Discount = self.getText(row, BillTableColumn.Disc_prcnt, int)
                     Disc_Price = Price * Discount / 100
                     self.setBillColumn(row, BillTableColumn.Rate, Rate)
                     self.setBillColumn(row, BillTableColumn.Disc, round(Disc_Price, 2))
                     self.setBillColumn(row, BillTableColumn.Price, round((Price - Disc_Price), 2))
                     self.setCellTracking(True)
                 except:
-                    try:
-                        self.setCellTracking(True)
-                        pass
-                    except:
-                        pass
+                    self.setCellTracking(True)
             elif col == BillTableColumn.Name:  # Change in Name column
                 try:
                     self.setCellTracking(False)
@@ -674,20 +556,13 @@ class BMS_Home_GUI(QMainWindow):
                         self.setBillColumn(row, BillTableColumn.Qnty, 1)
                 except:
                     pass
-                try:
-                    self.setCellTracking(True)
-                except:
-                    pass
+                self.setCellTracking(True)
 
             try:  # Net Totals and discounts calculation
                 self.CalcTotal()
                 self.setCellTracking(True)
             except:
-                try:
-                    self.setCellTracking(True)
-                    pass
-                except:
-                    pass
+                self.setCellTracking(True)
 
     def CalcTotal(self):
         global total
@@ -697,23 +572,20 @@ class BMS_Home_GUI(QMainWindow):
         dsc_list: list[int | float] = []
         qnty_list: list[int] = []
         try:
-            try:
-                self.setCellTracking(False)
-            except:
-                pass
+            self.setCellTracking(False)
             for key in bill_data.keys():
                 try:
-                    total += float((self.getText(bill_data[key], BillTableColumn.Price)))
+                    total += self.getText(bill_data[key], BillTableColumn.Price, float)
                 except:
                     pass
                 try:
-                    disc = float(self.getText(bill_data[key], BillTableColumn.Disc))
+                    disc = self.getText(bill_data[key], BillTableColumn.Disc, float)
                     discount += disc
                     dsc_list.append(disc)
                 except:
                     pass
                 try:
-                    qnty = int(self.getText(bill_data[key], BillTableColumn.Qnty))
+                    qnty = self.getText(bill_data[key], BillTableColumn.Qnty, int)
                     qnty_list.append(qnty)
                 except:
                     pass
