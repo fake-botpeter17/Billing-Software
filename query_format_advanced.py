@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from pyautogui import press
+from requests import post
 from qt_helper import QueryFormatterColumn
 
 
@@ -105,6 +106,10 @@ class QueryFormatterGUI(QMainWindow):
         self.resetCellCursor(*self.coordinates)
         self.rowManager = dict()
         return res
+    
+    def uploadItems(self, items):
+        from api import get_Api
+        post(url = get_Api() + "/updateStock", json=items)
 
     def setCellTracking(self, mode: bool) -> None:
         try:
