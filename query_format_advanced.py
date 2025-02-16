@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from pyautogui import press
-from requests import post
+from requests import get, post
+from api import get_Api
 from qt_helper import QueryFormatterColumn
 
 
@@ -98,18 +99,41 @@ class QueryFormatterGUI(QMainWindow):
         for item in self.rowManager.values():
             if item.isValid():
                 res.append(item.getObj())
-        print(res)
         self.setCellTracking(False)
         for row in self.rowManager:
             self.resetRow(row)
-        self.setCellTracking(True)
         self.resetCellCursor(*self.coordinates)
+        self.setCellTracking(True)
         self.rowManager = dict()
-        return res
+        if self.uploadItems(res):
+            reply = QMessageBox.question(self, "Upload Successfull",
+            "The items were updated to the database successfully. Print Barcodes?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                from BarcodeHelper import generatePDFs
+                result = generatePDFs(res)
+                if result:
+                    r = QMessageBox.question(self,
+                    "PDF Generated.",
+                    f"The PDFs (Batch {result['batch']}) have been generated successfully! Open them?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No)
+
+                    if r == QMessageBox.StandardButton.Yes:
+                        from os import startfile
+                        for file in result['paths']:
+                            startfile(file)
+                    else:
+                        self.close()
+            else:
+                self.close()
+
     
     def uploadItems(self, items):
         from api import get_Api
-        post(url = get_Api() + "/updateStock", json=items)
+        res = post(url = get_Api() + "/updateStock", json=items)  
+        return res.content
 
     def setCellTracking(self, mode: bool) -> None:
         try:
@@ -134,6 +158,7 @@ class QueryFormatterGUI(QMainWindow):
             try:
                 Item_ID = self.getText(row, col, int)
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid ID!", "The Item ID must be a number.")
                 return
             # if Item_ID in self.
@@ -153,6 +178,7 @@ class QueryFormatterGUI(QMainWindow):
                 if Rate < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].cost_price = Rate
@@ -165,6 +191,7 @@ class QueryFormatterGUI(QMainWindow):
                 if Rate < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].selling_price = Rate
@@ -177,6 +204,7 @@ class QueryFormatterGUI(QMainWindow):
                 if Quantity < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Quantity!", "Item Quantity must be a positive number.")
                 return
             self.rowManager[row].qnty = Quantity
@@ -184,12 +212,13 @@ class QueryFormatterGUI(QMainWindow):
             self.coordinates = row + 1, QueryFormatterColumn.Id   
     
     def loadStock(self, stock :Iterable):
+        self.Query_Button.setDisabled(True)
         self.Bill_Table.setColumnHidden(QueryFormatterColumn.CostPrice, True)
         s = len(stock)
         self.Bill_Table.setRowCount(s)
         self.Bill_Table.setColumnCount(6)
+        self.Bill_Table.setColumnWidth(QueryFormatterColumn.Id, 250)
         self.setCellTracking(False)
-        print(stock[120])
         for row, item_id in enumerate(stock): #Item=> ID : Obj
             item :dict = stock[item_id]
             self.setBillColumn(row, QueryFormatterColumn.Sno, row + 1)
