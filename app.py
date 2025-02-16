@@ -61,6 +61,12 @@ def getStock():
         items.append(item)
     return jsonify(items)
 
+@app.route("/updateStock", methods = ['POST'])
+def newStock():
+    data = request.get_json()
+    items_table.insert_many(data)
+    return jsonify(True),200
+
 @app.route("/connected")
 def is_connected():
     return jsonify(client is not None and client.admin.command('ping')['ok'] == 1)
