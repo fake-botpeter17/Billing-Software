@@ -84,7 +84,7 @@ class QueryFormatterGUI(QMainWindow):
         data = self.Bill_Table.item(row, column)  # type:ignore
         if data:
             return dtype(data.text())
-        return ""
+        return dtype()
 
     def resetCellCursor(self, row, col):
         while row >= 0:
@@ -105,7 +105,13 @@ class QueryFormatterGUI(QMainWindow):
         self.resetCellCursor(*self.coordinates)
         self.setCellTracking(True)
         self.rowManager = dict()
-        if self.uploadItems(res):
+        proceed = QMessageBox.question(self, "Proceed?",
+                                       f"There are {len(res)} item/s detected. Upload to DB?",
+                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                       QMessageBox.StandardButton.Yes)
+        from pyperclip import copy
+        copy(str(res))
+        if self.uploadItems(res) and (proceed == QMessageBox.StandardButton.Yes):
             reply = QMessageBox.question(self, "Upload Successfull",
             "The items were updated to the database successfully. Print Barcodes?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
