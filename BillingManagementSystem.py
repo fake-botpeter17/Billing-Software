@@ -404,7 +404,7 @@ class BMS_Home_GUI(QMainWindow):
                         self.setBillColumn(row, BillTableColumn.Qnty, str(qnty + 1))
                         try:
                             Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                            Rate = self.getText(row, BillTableColumn.Rate, int)
+                            Rate = self.getText(row, BillTableColumn.Rate, float)
                             Disc_Prc = self.getText(row, BillTableColumn.Disc_prcnt, float)
                             Price = Quantity * Rate
                             disc_amt = Price * Disc_Prc / 100
@@ -437,7 +437,7 @@ class BMS_Home_GUI(QMainWindow):
                         qnty = self.getText(row, BillTableColumn.Qnty, int)
                         self.setBillColumn(row, BillTableColumn.Qnty, qnty + 1)
                         try:
-                            Rate = self.getText(row, BillTableColumn.Rate, int)
+                            Rate = self.getText(row, BillTableColumn.Rate, float)
                             dis = self.getText(row, BillTableColumn.Disc_prcnt, float)
                             p = (qnty + 1) * Rate
                             Price = p * (1 - (dis / 100))
@@ -461,7 +461,7 @@ class BMS_Home_GUI(QMainWindow):
             try:
                 self.setCellTracking(False)
                 Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Rate = self.getText(row, BillTableColumn.Rate, float)
                 Price = Quantity * Rate
                 try:
                     Discount_prct = self.getText(row, BillTableColumn.Disc_prcnt, float)
@@ -470,7 +470,7 @@ class BMS_Home_GUI(QMainWindow):
                     self.setBillColumn(row, BillTableColumn.Price, Net_Price)
                     self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
                 except:
-                    Discount = self.getText(row, BillTableColumn.Disc, int)
+                    Discount = self.getText(row, BillTableColumn.Disc, float)
                     Net_Price = Price - Discount
                     self.setBillColumn(row, BillTableColumn.Price, Net_Price)
                     Discount_prct = Discount * 100 / Net_Price
@@ -490,7 +490,7 @@ class BMS_Home_GUI(QMainWindow):
                     Discount_Percentage = 0
                     self.setBillColumn(row,col, 0)
                 Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Rate = self.getText(row, BillTableColumn.Rate, float)
                 Price = Quantity * Rate
                 Discount = Price * (Discount_Percentage / 100)
                 Price_disc = Price - Discount
@@ -503,12 +503,12 @@ class BMS_Home_GUI(QMainWindow):
             try:
                 self.setCellTracking(False)
                 try:
-                    Discount = self.getText(row, BillTableColumn.Disc, int)
+                    Discount = self.getText(row, BillTableColumn.Disc, float)
                 except ValueError:
                     Discount = 0
                     self.setBillColumn(row,col, 0)
                 Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Rate = self.getText(row, BillTableColumn.Rate, float)
                 Price = Quantity * Rate
                 Price_disc = Price - Discount
                 self.setBillColumn(row, BillTableColumn.Price, Price_disc)
@@ -520,10 +520,10 @@ class BMS_Home_GUI(QMainWindow):
         elif col == BillTableColumn.Rate:  # Change in rate column
             try:
                 self.setCellTracking(False)
-                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Rate = self.getText(row, BillTableColumn.Rate, float)
                 Quantity = self.getText(row, BillTableColumn.Qnty, int)
                 Price = Quantity * Rate
-                Discount = self.getText(row, BillTableColumn.Disc_prcnt, int)
+                Discount = self.getText(row, BillTableColumn.Disc_prcnt, float)
                 Disc_Price = Price * Discount / 100
                 self.setBillColumn(row, BillTableColumn.Rate, Rate)
                 self.setBillColumn(row, BillTableColumn.Disc, round(Disc_Price, 2))
