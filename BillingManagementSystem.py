@@ -276,7 +276,7 @@ class BMS_Home_GUI(QMainWindow):
         self.Update_Stock.triggered.connect(lambda: self.startThread(WindowName.UpdateStock)) 
         self.View_Stock.triggered.connect(lambda: self.startThread(WindowName.ViewStock))
         self.Profile.triggered.connect(  
-            lambda: Profile_(User)  # type:ignore
+            lambda: Profile_(User)  # TODO:ignore
         )  # Should Change after defining Profile GUI
         self.Bill_Table.setColumnCount(8)  
         self.Bill_Table.setRowCount(26)  
@@ -340,224 +340,217 @@ class BMS_Home_GUI(QMainWindow):
         except TypeError:
             print(f"The Cell Tracking mode is already set to {mode}.")
 
-    def getText(self, row: int, column: int, dtype : type = str) -> str:
+    def getText(self, row: int, column: int, dtype : type = str):
         data = self.Bill_Table.item(row, column)  # type:ignore
         if data:
             return dtype(data.text())
-        return ""
+        return dtype()
 
     def resetRow(self, row: int) -> None:
         for col in range(8):
             self.setBillColumn(row, col, "")
 
     def handle_cell_change(self, row, col):
-        if row is not None:
-            if col == BillTableColumn.Id:  # Change in ID Column
+        if col == BillTableColumn.Id:  # Change in ID Column
+            self.setCellTracking(False)
+            try:
+                Item_ID = self.getText(row, BillTableColumn.Id, int)
+            except ValueError:  # Convertion Error (str -> int)
+                if (self.Bill_Table.item(row, BillTableColumn.Id).text() == ""):
+                    self.resetRow(row)
+                    '''tmp: list = list(bill_data.values())
+                    if tmp is not None:         #TODO: Optimize
+                        if row in tmp:
+                            ind = tmp.index(row)
+                            del bill_data[
+                                list(bill_data.keys())[ind]
+                            ]  
+                            self.CalcTotal()'''
+                    Bill.remove_row_item(row)     #TODO: Implement
+                    return
+
+            if Bill.contains(Item_ID):
                 self.setCellTracking(False)
-                try:
-                    Item_ID = self.getText(row, BillTableColumn.Id, int)
-                    if Bill.contains(Item_ID):
-                        self.setCellTracking(False)
-                        self.setBillColumn(row, BillTableColumn.Id, Item_ID)
-                except ValueError:  # Convertion Error (str -> int)
-                    if (
-                        self.Bill_Table.item(row, BillTableColumn.Id).text() == ""  
-                        or self.Bill_Table.item(row, BillTableColumn.Id).text()  
-                        == None
-                    ):
-                        self.resetRow(row)
-                        tmp: list = list(bill_data.values())
-                        if tmp is not None:         #TODO: Optimize
-                            if row in tmp:
-                                ind = tmp.index(row)
-                                del bill_data[
-                                    list(bill_data.keys())[ind]
-                                ]  
-                                self.CalcTotal()
-                        # Bill.remove_row_item(row)     #TODO: Implement
+                self.setBillColumn(row, BillTableColumn.Id, Item_ID)
+
+            try:
+                data = Bill.Get_Item(Item_ID)
+                if Bill.isDuplicateRow(row):
+                    KEY_PRESENT = True  # If duplicate?
+                    if Bill.getCart().get(Item_ID) is None:
+                        KEY_PRESENT = False
+                    if not KEY_PRESENT:   #Row is duplicate.... Item in New
+                        self.setBillColumn(row, BillTableColumn.Qnty, 1)
+                        self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
+                        self.setBillColumn(row, BillTableColumn.Disc, 0)
+                        self.setBillColumn(row, BillTableColumn.Price, 0)
+                        '''for key in bill_data.keys():       
+                            if bill_data[key] == row:
+                                break
+                        bill_data.pop(key, None)'''
+                        Bill.remove_row_item(row)
+                        self.setCellTracking(True)
+                        self.handle_cell_change(row, col)
                         return
 
-                try:
-                    data = items_cache.get(Item_ID)
-                    if (
-                        row in bill_data.values()
-                    ):  # Checking if row is already in use [Checking for over-writing] [Deleting from bill_data]
-                        KEY_PRESENT = True  # If duplicate?
-                        if bill_data.get(Item_ID, None) is None:
-                            KEY_PRESENT = False
-                        if not KEY_PRESENT:  #
-                            self.setBillColumn(row, BillTableColumn.Qnty, 1)
-                            self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
-                            self.setBillColumn(row, BillTableColumn.Disc, 0)
-                            self.setBillColumn(row, BillTableColumn.Price, 0)
-                            for key in bill_data.keys():
-                                if bill_data[key] == row:
-                                    break
-                            bill_data.pop(key, None)
-                            self.setCellTracking(True)
-                            self.handle_cell_change(row, col)
-                            return
-
-                    if data is not None:
-                        if Item_ID in bill_data.keys():  # Deals with duplicate entries
-                            self.setCellTracking(False)
-                            if row != bill_data[Item_ID]:
-                                self.setBillColumn(row, BillTableColumn.Id)
-                                self.setBillColumn(row, 0)
-                            row = bill_data[Item_ID]
-                            qnty = self.getText(row, BillTableColumn.Qnty, int)
-                            self.setBillColumn(row, BillTableColumn.Qnty, str(qnty + 1))
-                            try:
-                                Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                                Rate = self.getText(row, BillTableColumn.Rate, int)
-                                Disc_Prc = self.getText(row, BillTableColumn.Disc_prcnt, float)
-                                Price = Quantity * Rate
-                                disc_amt = Price * Disc_Prc / 100
-                                self.setBillColumn(
-                                    row, BillTableColumn.Price, round(Price - disc_amt, 2)
-                                )
-                                self.setBillColumn(row, BillTableColumn.Disc, round(disc_amt, 2))
-                            except Exception as e:
-                                print(f"Error! {e}")
-
-                            finally:
-                                self.setCellTracking(True)
-                        else:  # New Entry
-                            Item_Name, Item_Rate = data["name"], data["sp"]
-                            self.setBillColumn(
-                                row, BillTableColumn.Name, Item_Name
-                            )  # Set item in table
-                            self.setBillColumn(row, BillTableColumn.Rate, Item_Rate)
-                            self.setBillColumn(row, 0, row + 1)
-                            self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
-                            self.setBillColumn(row, BillTableColumn.Disc, 0)
-                            self.setBillColumn(row, BillTableColumn.Qnty, 1)
-                            self.setBillColumn(row, BillTableColumn.Price, Item_Rate)
-                            bill_data[Item_ID] = row
-                            press("down")
-                    else:  # If data from db is NONE  => New data (Custom)
-                        if (
-                            Item_ID in bill_data.keys()
-                        ):  # Checking for duplicate entry(if duplicate...)
+                if data is not None:
+                    if Bill.contains(Item_ID):  # Deals with duplicate entries
+                        self.setCellTracking(False)
+                        if row != Bill.getCart().get(Item_ID):
                             self.setBillColumn(row, BillTableColumn.Id)
-                            row = bill_data[Item_ID]
-                            qnty = self.getText(row, BillTableColumn.Qnty, int)
-                            self.setBillColumn(row, BillTableColumn.Qnty, qnty + 1)
-                            try:
-                                Rate = self.getText(row, BillTableColumn.Rate, int)
-                                dis = self.getText(row, BillTableColumn.Disc_prcnt, float)
-                                p = (qnty + 1) * Rate
-                                Price = p * (1 - (dis / 100))
-                                self.setBillColumn(row, BillTableColumn.Disc, p - Price)
-                                self.setBillColumn(row, BillTableColumn.Price, Price)
-                            except:
-                                pass
-                            pass
-                        else:  # If a new non-recurring entry not in db
-                            self.setBillColumn(row, 0, row + 1)
-                            self.setBillColumn(row, BillTableColumn.Disc, 0)
-                            self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
-                            self.setBillColumn(row, BillTableColumn.Qnty, 1)
-                            bill_data[Item_ID] = row
-                            press("right")
-                except:
-                    pass
-                self.setCellTracking(True)
-            elif col == BillTableColumn.Qnty:  # Change in Quantity Column
-                try:
-                    self.setCellTracking(False)
-                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                    Rate = self.getText(row, BillTableColumn.Rate, int)
-                    Price = Quantity * Rate
-                    try:
-                        Discount_prct = self.getText(row, BillTableColumn.Disc_prcnt, float)
-                        Discount = Price * (Discount_prct / 100)
-                        Net_Price = Price - Discount
-                        self.setBillColumn(row, BillTableColumn.Price, Net_Price)
-                        self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
-                    except:
-                        Discount = self.getText(row, BillTableColumn.Disc, int)
-                        Net_Price = Price - Discount
-                        self.setBillColumn(row, BillTableColumn.Price, Net_Price)
-                        Discount_prct = Discount * 100 / Net_Price
+                            self.setBillColumn(row, 0)
+                        row = Bill.getRowNumber(Item_ID)
+                        qnty = self.getText(row, BillTableColumn.Qnty, int)
+                        self.setBillColumn(row, BillTableColumn.Qnty, str(qnty + 1))
+                        try:
+                            Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                            Rate = self.getText(row, BillTableColumn.Rate, int)
+                            Disc_Prc = self.getText(row, BillTableColumn.Disc_prcnt, float)
+                            Price = Quantity * Rate
+                            disc_amt = Price * Disc_Prc / 100
+                            self.setBillColumn(
+                                row, BillTableColumn.Price, round(Price - disc_amt, 2)
+                            )
+                            self.setBillColumn(row, BillTableColumn.Disc, round(disc_amt, 2))
+                        except Exception as e:
+                            print(f"Error! {e}")
+
+                        finally:
+                            self.setCellTracking(True)
+                    else:  # New Entry
+                        Item_Name, Item_Rate = data.get("name"), data.get("sp")
                         self.setBillColumn(
-                            row, BillTableColumn.Disc_prcnt, round(Discount_prct, 2)
-                        )  # Should be verifiedd
-                    press(["down"] + ["left"] * 3)
-                    self.setCellTracking(True)
-                except:
-                    pass
-            elif col == BillTableColumn.Disc_prcnt:  # Change in Discount Percent
-                try:
-                    self.setCellTracking(False)
-                    try:
-                        Discount_Percentage = self.getText(row, BillTableColumn.Disc_prcnt, float)
-                    except ValueError:
-                        Discount_Percentage = 0
-                        self.setBillColumn(row,col, 0)
-                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                    Rate = self.getText(row, BillTableColumn.Rate, int)
-                    Price = Quantity * Rate
-                    Discount = Price * (Discount_Percentage / 100)
-                    Price_disc = Price - Discount
-                    self.setBillColumn(row, BillTableColumn.Price, Price_disc)
-                    self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
-                    self.setCellTracking(True)
-                except:
-                    pass
-            elif col == BillTableColumn.Disc:  # Change in Discount price
-                try:
-                    self.setCellTracking(False)
-                    try:
-                        Discount = self.getText(row, BillTableColumn.Disc, int)
-                    except ValueError:
-                        Discount = 0
-                        self.setBillColumn(row,col, 0)
-                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                    Rate = self.getText(row, BillTableColumn.Rate, int)
-                    Price = Quantity * Rate
-                    Price_disc = Price - Discount
-                    self.setBillColumn(row, BillTableColumn.Price, Price_disc)
-                    Disc_perc = (Discount / Price) * 100
-                    self.setBillColumn(row, BillTableColumn.Disc_prcnt, round(Disc_perc, 2))
-                    self.setCellTracking(True)
-                except:
-                    pass
-            elif col == BillTableColumn.Rate:  # Change in rate column
-                try:
-                    self.setCellTracking(False)
-                    Rate = self.getText(row, BillTableColumn.Rate, int)
-                    Quantity = self.getText(row, BillTableColumn.Qnty, int)
-                    Price = Quantity * Rate
-                    Discount = self.getText(row, BillTableColumn.Disc_prcnt, int)
-                    Disc_Price = Price * Discount / 100
-                    self.setBillColumn(row, BillTableColumn.Rate, Rate)
-                    self.setBillColumn(row, BillTableColumn.Disc, round(Disc_Price, 2))
-                    self.setBillColumn(row, BillTableColumn.Price, round((Price - Disc_Price), 2))
-                    self.setCellTracking(True)
-                except:
-                    self.setCellTracking(True)
-            elif col == BillTableColumn.Name:  # Change in Name column
-                try:
-                    self.setCellTracking(False)
-                    name = self.getText(row, BillTableColumn.Name)
-                    self.setBillColumn(row, BillTableColumn.Name, name)
-                    self.setBillColumn(row, 0, row + 1)
-                    if self.getText(row, BillTableColumn.Price) in [None, ""]:
-                        self.setBillColumn(row, BillTableColumn.Price, 0)
+                            row, BillTableColumn.Name, Item_Name
+                        )  # Set item in table
+                        self.setBillColumn(row, BillTableColumn.Rate, Item_Rate)
+                        self.setBillColumn(row, 0, row + 1)
+                        self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
+                        self.setBillColumn(row, BillTableColumn.Disc, 0)
+                        self.setBillColumn(row, BillTableColumn.Qnty, 1)
+                        self.setBillColumn(row, BillTableColumn.Price, Item_Rate)
+                        Bill.addItem(Item_ID, row)
+                        press("down")
+                else:  # If data from db is NONE  => New data (Custom)
+                    if Bill.contains(Item_ID):  # Checking for duplicate entry(if duplicate...)
+                        self.setBillColumn(row, BillTableColumn.Id)
+                        row = Bill.getRowNumber(Item_ID) 
+                        qnty = self.getText(row, BillTableColumn.Qnty, int)
+                        self.setBillColumn(row, BillTableColumn.Qnty, qnty + 1)
+                        try:
+                            Rate = self.getText(row, BillTableColumn.Rate, int)
+                            dis = self.getText(row, BillTableColumn.Disc_prcnt, float)
+                            p = (qnty + 1) * Rate
+                            Price = p * (1 - (dis / 100))
+                            self.setBillColumn(row, BillTableColumn.Disc, p - Price)
+                            self.setBillColumn(row, BillTableColumn.Price, Price)
+                        except:
+                            pass
+                        pass
+                    else:  # If a new non-recurring entry not in db
+                        self.setBillColumn(row, 0, row + 1)
                         self.setBillColumn(row, BillTableColumn.Disc, 0)
                         self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
-                    if self.getText(row, BillTableColumn.Qnty) in [None, ""]:
                         self.setBillColumn(row, BillTableColumn.Qnty, 1)
+                        # bill_data[Item_ID] = row
+                        Bill.addItem(Item_ID, row)
+                        press("right")
+            except:
+                pass
+            self.setCellTracking(True)
+        elif col == BillTableColumn.Qnty:  # Change in Quantity Column
+            try:
+                self.setCellTracking(False)
+                Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Price = Quantity * Rate
+                try:
+                    Discount_prct = self.getText(row, BillTableColumn.Disc_prcnt, float)
+                    Discount = Price * (Discount_prct / 100)
+                    Net_Price = Price - Discount
+                    self.setBillColumn(row, BillTableColumn.Price, Net_Price)
+                    self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
                 except:
-                    pass
+                    Discount = self.getText(row, BillTableColumn.Disc, int)
+                    Net_Price = Price - Discount
+                    self.setBillColumn(row, BillTableColumn.Price, Net_Price)
+                    Discount_prct = Discount * 100 / Net_Price
+                    self.setBillColumn(
+                        row, BillTableColumn.Disc_prcnt, round(Discount_prct, 2)
+                    )  # Should be verifiedd
+                press(["down"] + ["left"] * 3)
                 self.setCellTracking(True)
-
-            try:  # Net Totals and discounts calculation
-                self.CalcTotal()
+            except:
+                pass
+        elif col == BillTableColumn.Disc_prcnt:  # Change in Discount Percent
+            try:
+                self.setCellTracking(False)
+                try:
+                    Discount_Percentage = self.getText(row, BillTableColumn.Disc_prcnt, float)
+                except ValueError:
+                    Discount_Percentage = 0
+                    self.setBillColumn(row,col, 0)
+                Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Price = Quantity * Rate
+                Discount = Price * (Discount_Percentage / 100)
+                Price_disc = Price - Discount
+                self.setBillColumn(row, BillTableColumn.Price, Price_disc)
+                self.setBillColumn(row, BillTableColumn.Disc, round(Discount, 2))
+                self.setCellTracking(True)
+            except:
+                pass
+        elif col == BillTableColumn.Disc:  # Change in Discount price
+            try:
+                self.setCellTracking(False)
+                try:
+                    Discount = self.getText(row, BillTableColumn.Disc, int)
+                except ValueError:
+                    Discount = 0
+                    self.setBillColumn(row,col, 0)
+                Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Price = Quantity * Rate
+                Price_disc = Price - Discount
+                self.setBillColumn(row, BillTableColumn.Price, Price_disc)
+                Disc_perc = (Discount / Price) * 100
+                self.setBillColumn(row, BillTableColumn.Disc_prcnt, round(Disc_perc, 2))
+                self.setCellTracking(True)
+            except:
+                pass
+        elif col == BillTableColumn.Rate:  # Change in rate column
+            try:
+                self.setCellTracking(False)
+                Rate = self.getText(row, BillTableColumn.Rate, int)
+                Quantity = self.getText(row, BillTableColumn.Qnty, int)
+                Price = Quantity * Rate
+                Discount = self.getText(row, BillTableColumn.Disc_prcnt, int)
+                Disc_Price = Price * Discount / 100
+                self.setBillColumn(row, BillTableColumn.Rate, Rate)
+                self.setBillColumn(row, BillTableColumn.Disc, round(Disc_Price, 2))
+                self.setBillColumn(row, BillTableColumn.Price, round((Price - Disc_Price), 2))
                 self.setCellTracking(True)
             except:
                 self.setCellTracking(True)
+        elif col == BillTableColumn.Name:  # Change in Name column
+            try:
+                self.setCellTracking(False)
+                name = self.getText(row, BillTableColumn.Name)
+                self.setBillColumn(row, BillTableColumn.Name, name)
+                self.setBillColumn(row, 0, row + 1)
+                if self.getText(row, BillTableColumn.Price) in [None, ""]:
+                    self.setBillColumn(row, BillTableColumn.Price, 0)
+                    self.setBillColumn(row, BillTableColumn.Disc, 0)
+                    self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
+                if self.getText(row, BillTableColumn.Qnty) in [None, ""]:
+                    self.setBillColumn(row, BillTableColumn.Qnty, 1)
+            except:
+                pass
+            self.setCellTracking(True)
+
+        try:  # Net Totals and discounts calculation
+            self.CalcTotal()
+        finally:
+            self.setCellTracking(True)
 
     def CalcTotal(self):
         global total
@@ -568,19 +561,20 @@ class BMS_Home_GUI(QMainWindow):
         qnty_list: list[int] = []
         try:
             self.setCellTracking(False)
-            for key in bill_data.keys():
+            for key in Bill.getCart():
+                curRow = Bill.getRowNumber(key)
                 try:
-                    total += self.getText(bill_data[key], BillTableColumn.Price, float)
+                    total += self.getText(curRow, BillTableColumn.Price, float)
                 except:
                     pass
                 try:
-                    disc = self.getText(bill_data[key], BillTableColumn.Disc, float)
+                    disc = self.getText(curRow, BillTableColumn.Disc, float)
                     discount += disc
                     dsc_list.append(disc)
                 except:
                     pass
                 try:
-                    qnty = self.getText(bill_data[key], BillTableColumn.Qnty, int)
+                    qnty = self.getText(curRow, BillTableColumn.Qnty, int)
                     qnty_list.append(qnty)
                 except:
                     pass
@@ -609,22 +603,18 @@ class BMS_Home_GUI(QMainWindow):
         }
 
     def log_bill(self):
-        try:
-            if len(bill_data) == 0:
-                return
-        except:
+        if Bill.isEmpty():
             return
 
         final = self.CalcTotal()
         discount = float(final.get("discount", 0))
         nettotal = float(final.get("net_Total", 0))
-        global Bill_No
 
         # Define the content of your bill
         company_name = "Fashion Paradise"
         address1 = "No. 1, Richwood Avenue, Market Road,"
         address2 = "Thaiyur - 603 103."
-        bill_number = Bill_No
+        bill_number = Bill.Get_Bill_No()
         bill_date = date.today().strftime("%d.%m.%Y")
         bill_time = datetime.now().time().strftime("%H:%M:%S")
         billed_by = "{} ({})".format(*User.getNameDesignation())
@@ -638,7 +628,7 @@ class BMS_Home_GUI(QMainWindow):
         # content_height = 1.7 * inch + line_height * len(bill_data) + 0.8 * inch#-.05
         content_height = 11.9 * inch
         # Create a new canvas with a page size of 3 inches wide and dynamic height
-        pdf_path = f"Bills/{Bill_No}.pdf"
+        pdf_path = f"Bills/{bill_number}.pdf"
         c = canvas.Canvas(pdf_path, pagesize=(5 * inch, content_height))
         c.setPageSize((3 * inch, 11.7 * inch))
         # Set the font and font size
@@ -668,22 +658,23 @@ class BMS_Home_GUI(QMainWindow):
         y = content_height - 1.72 * inch
         c.setFont(font_name, font_size - 2)
         sno = 1
-        for key in bill_data.keys():
-            name = self.getText(bill_data[key], BillTableColumn.Name)
+        for key in Bill.getCart():
+            curROW = Bill.getRowNumber(key)
+            name = self.getText(curROW, BillTableColumn.Name)
             if name != "":
-                quantity = self.getText(bill_data[key], BillTableColumn.Qnty)
-                rate = self.getText(bill_data[key], BillTableColumn.Rate)
-                amount = round(int(quantity) * int(rate), 2)
+                quantity = self.getText(curROW, BillTableColumn.Qnty)
+                rate = self.getText(curROW, BillTableColumn.Rate)
+                amount = round(int(quantity) * float(rate), 2)
                 c.drawString(0.17 * inch, y, str(sno))
                 c.drawString(0.48 * inch, y, name[:22])
                 c.drawString(1.77 * inch, y, rate)
                 c.drawString(2.18 * inch, y, quantity)
                 c.drawString(2.57 * inch, y, str(amount))
-                self.resetRow(bill_data[key])
+                self.resetRow(curROW)
                 y -= line_height
                 sno += 1
-            else:
-                self.resetRow(bill_data[key])
+            else: 
+                self.resetRow(curROW)
         # Add total and net total
         c.setFont('Helvetica', font_size + 1)
         c.drawString(1 * inch, y - 0.15 * inch, f"Total        : Rs. {str(round(nettotal, 2))}")
@@ -693,14 +684,14 @@ class BMS_Home_GUI(QMainWindow):
 
         # Save the canvas to generate the PDF file
         c.save()
-        location = path.abspath(f"{DIREC}/Bills/{Bill_No}.pdf")
+        location = path.abspath(f"{DIREC}/Bills/{bill_number}.pdf")
         ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
         items_qry_data = {
-            "bill_no": Bill_No,
+            "bill_no": bill_number,
             "date": date.today().strftime("%d.%m.%Y")
             + ", "
             + datetime.now().time().strftime("%H:%M:%S"),
-            "items": list(bill_data.keys()),
+            "items": list(Bill.getCartItems()),
             "discounts": final["dsc_list"],
             "quantity": final["qnty_list"],
             "total": round(nettotal - discount, 2),
@@ -708,7 +699,7 @@ class BMS_Home_GUI(QMainWindow):
         print(items_qry_data)
         json_data = dumps(items_qry_data)
         post(f"{url}//bills", json=json_data)
-        bill_data.clear()
+        Bill.nextBillPrep()
         self.CalcTotal()
         self.setup(init=True)
 
