@@ -1,5 +1,9 @@
+import enum
+from random import choice
+from typing import Iterable
 from PyQt6 import uic
 from PyQt6.QtWidgets import (
+    QMenu,
     QPushButton,
     QTableWidget,
     QMainWindow,
@@ -11,6 +15,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from pyautogui import press
+from requests import get, post
+from api import get_Api
 from qt_helper import QueryFormatterColumn
 
 
@@ -31,6 +37,7 @@ class Item:
 class QueryFormatterGUI(QMainWindow):
     Bill_Table : QTableWidget
     Query_Button :QPushButton
+    Profile :QMenu
     def __init__(self) -> None:
         self.coordinates: tuple[int,int] = (0,0)
         self.rowManager :dict[int, Item] = dict()
@@ -44,6 +51,7 @@ class QueryFormatterGUI(QMainWindow):
         self.setWindowTitle(f"Query Formatter")
         icon = QIcon("icofi.ico")
         self.setWindowIcon(icon)
+        self.Profile.triggered.connect(self.loadStock)
         self.notification = Notify(
             default_notification_title="Query Formatter",
             default_notification_icon="Resources/icofi.ico",
@@ -60,7 +68,7 @@ class QueryFormatterGUI(QMainWindow):
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)
         self.Query_Button.clicked.connect(self.getQuery)
 
-        self.Bill_Table.setColumnWidth(0, 100)  
+        self.Bill_Table.setColumnWidth(QueryFormatterColumn.Sno, 100)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.Id, 150)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.Name, 450)  
         self.Bill_Table.setColumnWidth(QueryFormatterColumn.CostPrice, 250)  
@@ -76,7 +84,7 @@ class QueryFormatterGUI(QMainWindow):
         data = self.Bill_Table.item(row, column)  # type:ignore
         if data:
             return dtype(data.text())
-        return ""
+        return dtype()
 
     def resetCellCursor(self, row, col):
         while row >= 0:
@@ -91,14 +99,47 @@ class QueryFormatterGUI(QMainWindow):
         for item in self.rowManager.values():
             if item.isValid():
                 res.append(item.getObj())
-        print(res)
         self.setCellTracking(False)
         for row in self.rowManager:
             self.resetRow(row)
-        self.setCellTracking(True)
         self.resetCellCursor(*self.coordinates)
+        self.setCellTracking(True)
         self.rowManager = dict()
-        return res
+        proceed = QMessageBox.question(self, "Proceed?",
+                                       f"There are {len(res)} item/s detected. Upload to DB?",
+                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                       QMessageBox.StandardButton.Yes)
+        from pyperclip import copy
+        copy(str(res))
+        if self.uploadItems(res) and (proceed == QMessageBox.StandardButton.Yes):
+            reply = QMessageBox.question(self, "Upload Successfull",
+            "The items were updated to the database successfully. Print Barcodes?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                from BarcodeHelper import generatePDFs
+                result = generatePDFs(res)
+                if result:
+                    r = QMessageBox.question(self,
+                    "PDF Generated.",
+                    f"The PDFs (Batch {result['batch']}) have been generated successfully! Open them?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No)
+
+                    if r == QMessageBox.StandardButton.Yes:
+                        from os import startfile
+                        for file in result['paths']:
+                            startfile(file)
+                    else:
+                        self.close()
+            else:
+                self.close()
+
+    
+    def uploadItems(self, items):
+        from api import get_Api
+        res = post(url = get_Api() + "/updateStock", json=items)  
+        return res.content
 
     def setCellTracking(self, mode: bool) -> None:
         try:
@@ -123,6 +164,7 @@ class QueryFormatterGUI(QMainWindow):
             try:
                 Item_ID = self.getText(row, col, int)
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid ID!", "The Item ID must be a number.")
                 return
             # if Item_ID in self.
@@ -142,6 +184,7 @@ class QueryFormatterGUI(QMainWindow):
                 if Rate < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].cost_price = Rate
@@ -154,6 +197,7 @@ class QueryFormatterGUI(QMainWindow):
                 if Rate < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].selling_price = Rate
@@ -166,11 +210,30 @@ class QueryFormatterGUI(QMainWindow):
                 if Quantity < 0:
                     raise ValueError
             except ValueError:
+                if self.getText(row,col) == "": return
                 QMessageBox.warning(self, "Invalid Quantity!", "Item Quantity must be a positive number.")
                 return
             self.rowManager[row].qnty = Quantity
             press(['tab']*2) 
-            self.coordinates = row + 1, QueryFormatterColumn.Id       
+            self.coordinates = row + 1, QueryFormatterColumn.Id   
+    
+    def loadStock(self, stock :Iterable):
+        self.Query_Button.setDisabled(True)
+        self.Bill_Table.setColumnHidden(QueryFormatterColumn.CostPrice, True)
+        s = len(stock)
+        self.Bill_Table.setRowCount(s)
+        self.Bill_Table.setColumnCount(6)
+        self.Bill_Table.setColumnWidth(QueryFormatterColumn.Id, 250)
+        self.setCellTracking(False)
+        for row, item_id in enumerate(stock): #Item=> ID : Obj
+            item :dict = stock[item_id]
+            self.setBillColumn(row, QueryFormatterColumn.Sno, row + 1)
+            self.setBillColumn(row, QueryFormatterColumn.Id, item.get('id'))
+            self.setBillColumn(row, QueryFormatterColumn.Name, item.get('name'))
+            self.setBillColumn(row, QueryFormatterColumn.CostPrice, item.get('cp'))
+            self.setBillColumn(row, QueryFormatterColumn.SellingPrice, item.get('sp'))
+            self.setBillColumn(row, QueryFormatterColumn.Qnty, item.get('qnty'))
+
 
 
 def main():

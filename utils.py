@@ -53,8 +53,22 @@ class Bill_:
     __Bill_No_Gen :Generator
     __Bill_No :int = int()
     __Items :dict = dict()
-    __Cart :dict = dict()
-    __Row_Lookup :dict = dict()
+    __Cart :dict = dict()   #{id:row}
+    __Row_Lookup :dict = dict()  #{row:id}
+
+    @staticmethod
+    def getItems():
+        try:
+            req : Response= get(get_Api(testing=False) + "//get_stock", timeout=15)
+            items_cache = req.json()
+        except Timeout:
+            return
+        if not items_cache:
+            return {}
+        tmp = dict()
+        for item in items_cache:
+            tmp[item["id"]] = item
+        return tmp
 
     @classmethod
     def contains(cls, item_id: int) -> bool:
@@ -100,6 +114,44 @@ class Bill_:
     def Increment_Bill_No(cls : "Bill_") -> None:
         """Increments the bill number"""
         cls.__Bill_No = next(cls.__Bill_No_Gen)
+
+    @classmethod
+    def getCartItems(cls : "Bill_"):
+        return cls.__Cart.keys()
+
+    @classmethod
+    def getRowNumber(cls : "Bill_", Item_ID :int):
+        return cls.__Cart.get(Item_ID)
+
+    @classmethod
+    def isEmpty(cls : "Bill_") -> bool:
+        return len(cls.__Cart) == 0
+
+    @classmethod
+    def remove_row_item(cls : "Bill_", row_number : int) -> None:
+        item = cls.__Row_Lookup.get(row_number)
+        if item in cls.__Cart:
+            del cls.__Cart[item]
+        cls.__Row_Lookup.pop(row_number)
+
+    @classmethod
+    def isDuplicateRow(cls : "Bill_", row_number : int) -> bool:
+        return row_number in cls.__Row_Lookup
+
+    @classmethod
+    def addItem(cls : "Bill_", item_id : int, row :int) -> None:
+        cls.__Cart[item_id] = row
+        cls.__Row_Lookup[row] = item_id
+
+    @classmethod
+    def getCart(cls : "Bill_") -> dict[int, int | str]:
+        return cls.__Cart   
+
+    @classmethod
+    def nextBillPrep(cls : "Bill_"):
+        cls.__Cart.clear()
+        cls.__Row_Lookup.clear()
+        cls.Increment_Bill_No()
 
     # @classmethod
     # def remove_row_item(cls : "Bill_", row_number : int) -> None:

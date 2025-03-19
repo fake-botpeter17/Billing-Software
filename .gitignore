@@ -19,7 +19,13 @@ test.ipynb
 Resources/icofi.ico
 Resources/lgfi.jpeg
 testt.py
-Barcodes/*
+Barcodes/*.pdf
+Barcodes/*.txt
+Barcodes/*.zip
+Barcodes/OK/*
+Barcodes/Size Labels/*
+temp_api.py
+Barcode_Sample
 Barcode.py
 Batch1.pdf
 labels.pdf
