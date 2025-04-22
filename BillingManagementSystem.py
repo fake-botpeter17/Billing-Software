@@ -30,6 +30,7 @@ from urllib.request import Request, urlopen
 from json import dumps, loads
 from datetime import datetime, date
 from sys import exit as exi
+import logging
 # Custom Imports
 from qt_helper import BillTableColumn
 from utils import User
@@ -42,6 +43,15 @@ DIREC = Path(__file__).resolve().parent
 punc : LiteralString = string.punctuation
 
 url: str = get_Api()
+
+# Configure logging
+logging.basicConfig(
+    filename="bms.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+logging.info("Billing Management System started.")
 
 def Init() -> None:
     try:
@@ -59,11 +69,17 @@ def Init() -> None:
 
 def main():
     global app
+    logging.info("Initializing QApplication and main window.")
     app = QApplication([])
     window = BMS_Home_GUI()
     window.showMaximized()
-    exi(app.exec())
-
+    logging.info("Main window shown. Application event loop starting.")
+    try:
+        app.exec_()     #    exi(app.exec()) => Original
+        logging.info("Application exited normally.")
+    except Exception as e:
+        logging.error(f"Application crashed: {e}", exc_info=True)
+        raise
 
 def Login() -> None:
     global login_window
@@ -736,4 +752,10 @@ class BMS_Home_GUI(QMainWindow):
 
 
 if __name__ == "__main__":
-    Init()
+    logging.info("Script entry point reached.")
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"Fatal error: {e}", exc_info=True)
+        sys.exit(1)
+    logging.info("Script finished execution.")
