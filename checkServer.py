@@ -31,5 +31,5 @@ def checkServer(ping = True) -> bool:
             notification.message = "Server Not Connected"
             notification.send()
         return False
-
-checkServer()
+if __name__ == "__main__":
+    checkServer()
