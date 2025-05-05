@@ -3,11 +3,12 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 from reportlab.graphics.barcode import code39
-
+from os import path
+pathJoiner = path.join
 
 def create_labels_rs_bar(barcodes_with_repetitions, name, direc):
-    p = Path(f"{direc}//{name}.pdf").absolute()
-    c = canvas.Canvas(f"{direc}//{name}.pdf", pagesize=A4)
+    p = Path(pathJoiner(direc, f"{name}.pdf")).absolute()
+    c = canvas.Canvas(pathJoiner(direc, f"{name}.pdf"), pagesize=A4)
     width, height = A4
 
     top_margin = 14 * mm  # 12 mm
@@ -90,7 +91,7 @@ def create_label_reference_pdf(barcodes_with_repetitions: list[dict], name: str,
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
     # Define the PDF file path
-    file_path = f"{direc}//{name}.pdf"
+    file_path = pathJoiner(direc, f"{name}.pdf")
     p = Path(file_path).absolute()
     
     # Define headers
@@ -131,7 +132,7 @@ def create_label_reference_pdf(barcodes_with_repetitions: list[dict], name: str,
 
 def generatePDFs(bmrp, direc = "Barcodes"):
     from json import loads, dumps
-    with open(f"{direc}/batch_number.json", "r+") as data:
+    with open(pathJoiner(direc, "batch_number.json"), "r+") as data:
         json_raw_data = data.read()
         json_data = loads(json_raw_data)
         current_batch = json_data.get('batch') + 1

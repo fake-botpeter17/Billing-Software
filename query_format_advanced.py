@@ -1,6 +1,4 @@
-import enum
 import logging
-from random import choice
 from typing import Iterable
 from PyQt6 import uic
 from PyQt6.QtWidgets import (
@@ -19,6 +17,8 @@ from pyautogui import press
 from requests import get, post
 from api import get_Api
 from qt_helper import QueryFormatterColumn
+from os import path
+pathJoiner = path.join
 
 # Configure logging
 logging.basicConfig(
@@ -61,7 +61,7 @@ class QueryFormatterGUI(QMainWindow):
         self.rowManager :dict[int, Item] = dict()
         from notifypy import Notify
         super(QueryFormatterGUI, self).__init__()
-        uic.loadUi("Resources/Query_Formatter.ui", self)
+        uic.loadUi(pathJoiner("Resources", "Query_Formatter.ui"), self)
         aspect_ratio = 16 / 9  # aspect ratio
         min_height = 900
         min_width = int(min_height * aspect_ratio)
@@ -72,7 +72,7 @@ class QueryFormatterGUI(QMainWindow):
         self.Profile.triggered.connect(self.loadStock)
         self.notification = Notify(
             default_notification_title="Query Formatter",
-            default_notification_icon="Resources/icofi.ico",
+            default_notification_icon=pathJoiner("Resources", "icofi.ico"),
             default_notification_application_name="BMS"
         )
         self.show()
@@ -82,7 +82,7 @@ class QueryFormatterGUI(QMainWindow):
         
     def setup(self):
         logger.info("Setting up GUI components")
-        self.setStyleSheet(open("Resources/Default.qss").read())
+        self.setStyleSheet(open(pathJoiner("Resources", "Default.qss")).read())
         self.Bill_Table.setColumnCount(6)  
         self.Bill_Table.setRowCount(50)
         self.Bill_Table.cellChanged.connect(self.handle_cell_change)

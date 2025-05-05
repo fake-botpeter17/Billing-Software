@@ -2,7 +2,10 @@ from psycopg2 import *
 from bcrypt import gensalt, hashpw
 from pickle import load,dump 
 from secrets import token_urlsafe
-from os import getenv
+from os import getenv, path
+pathJoiner = path.join
+expanduser = path.expanduser
+
 def  SetPassword(Num :int=1,host_ :str= "{}".format(getenv('Database_Host')),Db :str= "{}".format(getenv('Database_Name')),usr :str="{}".format(getenv("Database_User")),pwd :str= "{}".format(getenv('Database_Pwd')),Port :str="{}".format(getenv("Database_Port"))):
     try:
         con=connect(host=host_, database=Db ,user=usr ,password=pwd, port = Port)#Establishing Connection to the Server
@@ -10,7 +13,7 @@ def  SetPassword(Num :int=1,host_ :str= "{}".format(getenv('Database_Host')),Db 
         print("Error! Could not connect to the server!")
         return
     cur=con.cursor()
-    f=open("E://PETER//BILLING-SOFTWARE//BillingInfo.dat","rb")
+    f=open(pathJoiner(expanduser("~"), "BillingInfo.dat"), "rb")
     data =load(f)
     query="update users set pwd=%s,hash_key=%s where uid = %s"
     for i in range(Num): 
@@ -38,7 +41,7 @@ def  SetPassword(Num :int=1,host_ :str= "{}".format(getenv('Database_Host')),Db 
     print("Password Updated Successfully!")
     con.close()
     f.close()
-    g=open("E://PETER//BILLING-SOFTWARE//BillingInfo.dat","wb")
+    g=open(pathJoiner(expanduser("~"), "BillingInfo.dat"), "wb")
     dump(data,g)
     g.close()
 

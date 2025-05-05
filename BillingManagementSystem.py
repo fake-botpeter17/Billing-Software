@@ -38,6 +38,9 @@ from qt_helper import BillTableColumn
 from utils import User
 from utils import Bill_ as Bill
 from api import get_Api
+pathJoiner = path.join
+abspath = path.abspath
+
 #Platform dependant
 CURR_PLATFORM = platform.system()
 if CURR_PLATFORM == 'Windows':
@@ -351,7 +354,7 @@ class BMS_Home_GUI(QMainWindow):
         
     def setup(self, init: bool = False):
         logging.info(f"BMS_Home_GUI: Running setup (init={init}).")
-        self.setTheme("Resources/Default.qss")
+        self.setTheme(pathJoiner("Resources", "Default.qss"))
         self.Bill_Number_Label.setText(  # type:ignore
             "Bill No    : {}".format(Bill.Get_Bill_No())
         )
@@ -755,7 +758,7 @@ class BMS_Home_GUI(QMainWindow):
         # content_height = 1.7 * inch + line_height * len(bill_data) + 0.8 * inch#-.05
             content_height = 11.9 * inch
         # Create a new canvas with a page size of 3 inches wide and dynamic height
-            pdf_path = f"Bills/{bill_number}.pdf"
+            pdf_path = pathJoiner("Bills", f"{bill_number}.pdf")
             c = canvas.Canvas(pdf_path, pagesize=(5 * inch, content_height))
             c.setPageSize((3 * inch, 11.7 * inch))
         # Set the font and font size
@@ -812,7 +815,7 @@ class BMS_Home_GUI(QMainWindow):
         # Save the canvas to generate the PDF file
             c.save()
             logging.info(f"PDF bill saved to {pdf_path}")
-            location = path.abspath(f"{DIREC}/Bills/{bill_number}.pdf")
+            location = abspath(pathJoiner(DIREC, "Bills", f"{bill_number}.pdf"))
             try:
                 if CURR_PLATFORM == 'Windows':
                     ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
