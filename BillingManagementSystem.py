@@ -2,6 +2,7 @@
 import string
 import platform
 import subprocess
+import os
 from os import path
 from threading import Thread, Event
 from enum import StrEnum, auto
@@ -100,6 +101,10 @@ def Init() -> None:
 def main():
     global app
     logging.info("Initializing QApplication and main window.")
+    if CURR_PLATFORM == 'Linux':
+        logging.info("Linux environment detected, setting Qt platform settings")
+        QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
+        os.environ['QT_QPA_PLATFORM'] = 'xcb'
     app = QApplication([])
     window = BMS_Home_GUI()
     window.showMaximized()
