@@ -5,6 +5,7 @@ Init.env
 My_Icon_Resized.jpeg
 My_Icon_Resized_Pro.jpeg
 AdminTools/*
+query_formatter.log
 Bills/*
 exec/*
 build/*
