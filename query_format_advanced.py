@@ -1,4 +1,5 @@
 import enum
+import logging
 from random import choice
 from typing import Iterable
 from PyQt6 import uic
@@ -19,6 +20,16 @@ from requests import get, post
 from api import get_Api
 from qt_helper import QueryFormatterColumn
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('query_formatter.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 class Item:
     def __init__(self, id: int = None, name :str = None, cost_price :int | float = None, selling_price :int | float = None, qnty : int = None) -> None:
@@ -27,18 +38,25 @@ class Item:
         self.cost_price = cost_price
         self.selling_price = selling_price
         self.qnty = qnty
+        logger.debug(f"Created new Item with ID: {id}")
     
     def getObj(self):
-        return {'id':self.id, 'name': f'{self.name}', 'cp': self.cost_price, 'qnty': self.qnty, 'added': round(self.cost_price * 1.08, 2), 'sp': self.selling_price}
+        obj = {'id':self.id, 'name': f'{self.name}', 'cp': self.cost_price, 'qnty': self.qnty, 'added': round(self.cost_price * 1.08, 2), 'sp': self.selling_price}
+        logger.debug(f"Generated object for Item {self.id}: {obj}")
+        return obj
 
     def isValid(self) -> bool:
-        return self.id and self.name and self.cost_price and self.selling_price and self.qnty
+        valid = self.id and self.name and self.cost_price and self.selling_price and self.qnty
+        if not valid:
+            logger.warning(f"Invalid item data for ID {self.id}")
+        return valid
 
 class QueryFormatterGUI(QMainWindow):
     Bill_Table : QTableWidget
     Query_Button :QPushButton
     Profile :QMenu
     def __init__(self) -> None:
+        logger.info("Initializing QueryFormatterGUI")
         self.coordinates: tuple[int,int] = (0,0)
         self.rowManager :dict[int, Item] = dict()
         from notifypy import Notify
@@ -60,8 +78,10 @@ class QueryFormatterGUI(QMainWindow):
         self.show()
         self.setup()
         press('tab')
+        logger.info("QueryFormatterGUI initialization complete")
         
     def setup(self):
+        logger.info("Setting up GUI components")
         self.setStyleSheet(open("Resources/Default.qss").read())
         self.Bill_Table.setColumnCount(6)  
         self.Bill_Table.setRowCount(50)
@@ -95,10 +115,12 @@ class QueryFormatterGUI(QMainWindow):
             col -= 1 
 
     def getQuery(self):
+        logger.info("Generating query from table data")
         res :list[dict] = list()
         for item in self.rowManager.values():
             if item.isValid():
                 res.append(item.getObj())
+        logger.info(f"Found {len(res)} valid items for query")
         self.setCellTracking(False)
         for row in self.rowManager:
             self.resetRow(row)
@@ -137,9 +159,15 @@ class QueryFormatterGUI(QMainWindow):
 
     
     def uploadItems(self, items):
+        logger.info(f"Attempting to upload {len(items)} items to database")
         from api import get_Api
-        res = post(url = get_Api() + "/updateStock", json=items)  
-        return res.content
+        try:
+            res = post(url = get_Api() + "/updateStock", json=items)
+            logger.info("Upload successful")
+            return res.content
+        except Exception as e:
+            logger.error(f"Failed to upload items: {str(e)}\n\nItems: {items}")
+            return None
 
     def setCellTracking(self, mode: bool) -> None:
         try:
@@ -156,15 +184,16 @@ class QueryFormatterGUI(QMainWindow):
             self.setBillColumn(row, col, "")
 
     def handle_cell_change(self, row, col):
-        # self.notification.message = f"Pressed ({row}, {col})"
-        # self.notification.send(block=False)
+        logger.debug(f"Cell changed at position ({row}, {col})")
         self.coordinates = row, col
         if col == QueryFormatterColumn.Id:
             # if row > 0 and row in self.rowManager:
             try:
                 Item_ID = self.getText(row, col, int)
+                logger.info(f"New item ID entered: {Item_ID} at row {row}")
             except ValueError:
                 if self.getText(row,col) == "": return
+                logger.warning(f"Invalid ID entered at row {row}")
                 QMessageBox.warning(self, "Invalid ID!", "The Item ID must be a number.")
                 return
             # if Item_ID in self.
@@ -175,6 +204,7 @@ class QueryFormatterGUI(QMainWindow):
         elif col == QueryFormatterColumn.Name:
             name = self.getText(row, col)
             if name!= "":
+                logger.debug(f"Setting name '{name}' for item at row {row}")
                 self.rowManager[row].name = name
                 press('tab')
                 self.coordinates = row, col + 1
@@ -183,8 +213,10 @@ class QueryFormatterGUI(QMainWindow):
                 Rate = self.getText(row, col, float)
                 if Rate < 0:
                     raise ValueError
+                logger.debug(f"Setting cost price {Rate} for item at row {row}")
             except ValueError:
                 if self.getText(row,col) == "": return
+                logger.warning(f"Invalid cost price entered at row {row}")
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].cost_price = Rate
@@ -196,8 +228,10 @@ class QueryFormatterGUI(QMainWindow):
                 Rate = self.getText(row, col, float)
                 if Rate < 0:
                     raise ValueError
+                logger.debug(f"Setting selling price {Rate} for item at row {row}")
             except ValueError:
                 if self.getText(row,col) == "": return
+                logger.warning(f"Invalid selling price entered at row {row}")
                 QMessageBox.warning(self, "Invalid Price!", "Item Price must be a positive number.")
                 return
             self.rowManager[row].selling_price = Rate
@@ -209,8 +243,10 @@ class QueryFormatterGUI(QMainWindow):
                 Quantity = self.getText(row, col, int)
                 if Quantity < 0:
                     raise ValueError
+                logger.debug(f"Setting quantity {Quantity} for item at row {row}")
             except ValueError:
                 if self.getText(row,col) == "": return
+                logger.warning(f"Invalid quantity entered at row {row}")
                 QMessageBox.warning(self, "Invalid Quantity!", "Item Quantity must be a positive number.")
                 return
             self.rowManager[row].qnty = Quantity
@@ -233,7 +269,6 @@ class QueryFormatterGUI(QMainWindow):
             self.setBillColumn(row, QueryFormatterColumn.CostPrice, item.get('cp'))
             self.setBillColumn(row, QueryFormatterColumn.SellingPrice, item.get('sp'))
             self.setBillColumn(row, QueryFormatterColumn.Qnty, item.get('qnty'))
-
 
 
 def main():
