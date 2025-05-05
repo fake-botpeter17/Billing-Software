@@ -1,7 +1,7 @@
 # Imports
 import string
 from os import path
-from threading import Thread
+from threading import Thread, Event
 from enum import StrEnum, auto
 from typing import LiteralString
 from requests import post
@@ -32,6 +32,7 @@ from datetime import datetime, date
 from sys import exit as exi
 import logging
 # Custom Imports
+from checkServer import checkServer
 from qt_helper import BillTableColumn
 from utils import User
 from utils import Bill_ as Bill
@@ -53,6 +54,19 @@ logging.basicConfig(
 )
 logging.info("Billing Management System started.")
 
+def run_check_server_periodically():
+    def check_server_task():
+        while True:
+            try:
+                checkServer(ping=False)
+                # logging.info("Server check completed successfully.")
+            except Exception as e:
+                logging.error(f"Error during server check: {e}", exc_info=True)
+            Event().wait(180)  # Wait for 3 minutes (180 seconds)
+
+    thread = Thread(target=check_server_task, daemon=True)
+    thread.start()
+
 def Init() -> None:
     logging.info("Init: Attempting to connect to server...")
     try:
@@ -68,6 +82,7 @@ def Init() -> None:
         logging.error(f"Init: Exception during connection: {e}", exc_info=True)
         messagebox.showerror("Error", f"Error: {e}")
         exit(True)
+    run_check_server_periodically()
     Login()
 
 
@@ -137,7 +152,7 @@ def Login() -> None:
             messagebox.showerror(
                 title="Authentication Error!", message="Enter the Password!"
             )
-        elif not username.isalnum() or not password.isalnum():
+        elif not username.isalnum():
             logging.warning(f"Login failed: Invalid characters in username or password for username='{username}'")
             messagebox.showerror(
                 title="Authentication Error!",
