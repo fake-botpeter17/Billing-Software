@@ -1,11 +1,12 @@
 # Imports
 import string
+import platform
+import subprocess
 from os import path
 from threading import Thread, Event
 from enum import StrEnum, auto
 from typing import LiteralString
 from requests import post
-from win32api import ShellExecute
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from pathlib import Path
@@ -37,6 +38,13 @@ from qt_helper import BillTableColumn
 from utils import User
 from utils import Bill_ as Bill
 from api import get_Api
+#Platform dependant
+CURR_PLATFORM = platform.system()
+if CURR_PLATFORM == 'Windows':
+    from win32api import ShellExecute
+elif CURR_PLATFORM == 'Linux':
+    import subprocess
+
 
 DIREC = Path(__file__).resolve().parent
 
@@ -806,7 +814,12 @@ class BMS_Home_GUI(QMainWindow):
             logging.info(f"PDF bill saved to {pdf_path}")
             location = path.abspath(f"{DIREC}/Bills/{bill_number}.pdf")
             try:
-                ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
+                if CURR_PLATFORM == 'Windows':
+                    ShellExecute(0, "print", location, None, ".", 0)  # type: ignore
+                elif CURR_PLATFORM == 'Linux':
+                    subprocess.run(['lpr', location])
+                else:
+                    raise Exception(f"Unsupported platform: {CURR_PLATFORM}")
                 logging.info(f"Sent bill PDF to printer: {location}")
             except Exception as e:
                 logging.error(f"Error printing bill PDF: {e}", exc_info=True)
