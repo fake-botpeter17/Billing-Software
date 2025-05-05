@@ -69,7 +69,7 @@ def run_check_server_periodically():
     def check_server_task():
         while True:
             try:
-                checkServer(ping=False)
+                checkServer(ping=False, verbose=False)
                 # logging.info("Server check completed successfully.")
             except Exception as e:
                 logging.error(f"Error during server check: {e}", exc_info=True)
