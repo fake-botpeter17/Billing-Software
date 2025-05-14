@@ -3,7 +3,7 @@ import string
 import platform
 import subprocess
 import os
-from os import path
+from os import path, makedirs
 from threading import Thread, Event
 from enum import StrEnum, auto
 from typing import LiteralString
@@ -13,7 +13,6 @@ from reportlab.lib.units import inch
 from pathlib import Path
 from pyautogui import press
 from tkinter.filedialog import askopenfilename
-from collections.abc import Generator
 from tkinter import Tk, Frame, Label, Entry, Button, messagebox
 from PyQt6.QtWidgets import (
     QLabel,
@@ -95,6 +94,7 @@ def Init() -> None:
         messagebox.showerror("Error", f"Error: {e}")
         exit(True)
     run_check_server_periodically()
+    makedirs(pathJoiner(DIREC, "Bills"), exist_ok=True)
     Login()
 
 
