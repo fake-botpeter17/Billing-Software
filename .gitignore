@@ -1,3 +1,4 @@
 BMS/*
 previous/*
 .gitignore
+data/Bills/*.pdf

@@ -1,0 +1,7 @@
+{
+    "host": "localhost",
+    "database": "billing_system",
+    "user": "postgres",
+    "password": "",
+    "port": 5432
+}
