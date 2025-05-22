@@ -2,3 +2,5 @@ BMS/*
 previous/*
 .gitignore
 data/Bills/*.pdf
+*/__pycache__
+*/*/__pycache__
