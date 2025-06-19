@@ -1,0 +1,13 @@
+[project]
+name = "BMS-Kelambakkam"
+version = "0.1.0"
+description = "Bill Management System for Fashion Paradise - Kelambakkam"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "notify-py>=0.3.43",
+    "pyautogui>=0.9.54",
+    "pyqt6>=6.9.1",
+    "reportlab>=4.4.2",
+    "requests>=2.32.4",
+]
