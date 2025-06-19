@@ -313,7 +313,7 @@ class BMS_Home_GUI(QMainWindow):
         """
         logging.info("BMS_Home_GUI: Initializing main window GUI.")
         super(BMS_Home_GUI, self).__init__()
-        uic.loadUi("BMS_Home_GUI.ui", self)  
+        uic.loadUi("BMS_Home_GUI.ui", self)
         aspect_ratio = 16 / 9  # aspect ratio
         min_height = 900
         min_width = int(min_height * aspect_ratio)
@@ -323,9 +323,9 @@ class BMS_Home_GUI(QMainWindow):
         self.setWindowIcon(icon)
         if User.isAdmin():
             logging.info("BMS_Home_GUI: User is admin, enabling admin menus.")
-            self.menuSales.setEnabled(True)  
-            self.menuStock.setEnabled(True)  
-            self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit 
+            self.menuSales.setEnabled(True)
+            self.menuStock.setEnabled(True)
+            self.New_Bill_Tab.setEnabled(True)  # Should Set back to Flase at exit
         self.show()
         self.setup()
         press("tab")
@@ -356,7 +356,7 @@ class BMS_Home_GUI(QMainWindow):
         self.stockViewer = QueryFormatterGUI()
         self.stockViewer.loadStock(Bill.getItems())
         self.stockViewer.showMaximized()
-        
+
     def setup(self, init: bool = False):
         logging.info(f"BMS_Home_GUI: Running setup (init={init}).")
         self.setTheme(pathJoiner("Resources", "Default.qss"))
@@ -366,32 +366,32 @@ class BMS_Home_GUI(QMainWindow):
         self.Bill_Date_Label.setText(  # type:ignore
             "Bill Date : {}".format(Bill.Get_Date())
         )
-        self.Billed_By_Label.setText(  
+        self.Billed_By_Label.setText(
             "Billed By : {} ({})".format(*User.getNameDesignation())
         )
         self.Bill_Time_Label.setText(  # type:ignore
             "Bill Time : {}".format(Bill.Get_Time())
         )
-        self.actionLogout.triggered.connect(lambda: self.logout())  
-        self.actionThemes.triggered.connect(lambda: self.setTheme())  
-        self.Update_Stock.triggered.connect(lambda: self.startThread(WindowName.UpdateStock)) 
+        self.actionLogout.triggered.connect(lambda: self.logout())
+        self.actionThemes.triggered.connect(lambda: self.setTheme())
+        self.Update_Stock.triggered.connect(lambda: self.startThread(WindowName.UpdateStock))
         self.View_Stock.triggered.connect(lambda: self.startThread(WindowName.ViewStock))
-        self.Profile.triggered.connect(  
+        self.Profile.triggered.connect(
             lambda: Profile_(User)  # TODO:ignore
         )  # Should Change after defining Profile GUI
-        self.Bill_Table.setColumnCount(8)  
-        self.Bill_Table.setRowCount(26)  
-        self.Bill_Table.cellChanged.connect(self.handle_cell_change)  
-        self.Print_Button.clicked.connect(self.log_bill)  
+        self.Bill_Table.setColumnCount(8)
+        self.Bill_Table.setRowCount(26)
+        self.Bill_Table.cellChanged.connect(self.handle_cell_change)
+        self.Print_Button.clicked.connect(self.log_bill)
         # Setting Column Widths
         # Didn't define the width of price col to allow resizing
-        self.Bill_Table.setColumnWidth(0, 100)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Id, 150)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Name, 350)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Rate, 150)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Qnty, 150)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Disc_prcnt, 175)  
-        self.Bill_Table.setColumnWidth(BillTableColumn.Disc, 175)  
+        self.Bill_Table.setColumnWidth(0, 100)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Id, 150)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Name, 350)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Rate, 150)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Qnty, 150)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Disc_prcnt, 175)
+        self.Bill_Table.setColumnWidth(BillTableColumn.Disc, 175)
 
     def closeEvent(self, event):
         logging.info("BMS_Home_GUI: Window close event triggered.")
@@ -504,7 +504,7 @@ class BMS_Home_GUI(QMainWindow):
                         self.setBillColumn(row, BillTableColumn.Disc_prcnt, 0)
                         self.setBillColumn(row, BillTableColumn.Disc, 0)
                         self.setBillColumn(row, BillTableColumn.Price, 0)
-                        '''for key in bill_data.keys():       
+                        '''for key in bill_data.keys():
                             if bill_data[key] == row:
                                 break
                         bill_data.pop(key, None)'''
@@ -554,7 +554,7 @@ class BMS_Home_GUI(QMainWindow):
                     logging.warning(f"No data found for Item_ID {Item_ID} at row {row}. Treating as custom entry.")
                     if Bill.contains(Item_ID):  # Checking for duplicate entry(if duplicate...)
                         self.setBillColumn(row, BillTableColumn.Id)
-                        row = Bill.getRowNumber(Item_ID) 
+                        row = Bill.getRowNumber(Item_ID)
                         qnty = self.getText(row, BillTableColumn.Qnty, int)
                         self.setBillColumn(row, BillTableColumn.Qnty, qnty + 1)
                         try:
@@ -711,17 +711,17 @@ class BMS_Home_GUI(QMainWindow):
                     logging.error(f"CalcTotal: Error getting quantity for row={curRow}: {e}", exc_info=True)
         except Exception as e:
             logging.error(f"CalcTotal: Exception during calculation: {e}", exc_info=True)
-        self.Net_Discount_Label.setText(  
+        self.Net_Discount_Label.setText(
             "Net Discount    : " + str(round(discount, 2))
         )
-        net_total = round(total + discount, 2)  
-        self.Total_Label.setText(  
+        net_total = round(total + discount, 2)
+        self.Total_Label.setText(
             "Total                 : " + str(round(total, 2))
         )
-        self.Net_Total_Label.setText(  
+        self.Net_Total_Label.setText(
             "Net Total          : " + str(net_total)
         )
-        self.Bill_Time_Label.setText(  
+        self.Bill_Time_Label.setText(
             "Bill Time : {}".format(datetime.now().time().strftime("%H:%M:%S"))
         )
         logging.info(f"CalcTotal: Calculation complete. total={total}, net_total={net_total}, discount={discount}")
@@ -869,9 +869,9 @@ class BMS_Home_GUI(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             logging.info("logout: User confirmed logout. Logging out...")
             User.toggleLoggingOut()
-            self.menuSales.setEnabled(False)  
-            self.menuStock.setEnabled(False)  
-            self.New_Bill_Tab.setEnabled(False)  
+            self.menuSales.setEnabled(False)
+            self.menuStock.setEnabled(False)
+            self.New_Bill_Tab.setEnabled(False)
             information_dialog = QMessageBox()
             information_dialog.setWindowTitle("Success!")
             information_dialog.setText("Logged out successfully!")
@@ -892,7 +892,7 @@ class BMS_Home_GUI(QMainWindow):
             return
 
 
-if __name__ == "__main__":
+def starter():
     logging.info("Script entry point reached.")
     try:
         Init()
@@ -900,3 +900,6 @@ if __name__ == "__main__":
         logging.error(f"Fatal error: {e}", exc_info=True)
         exi(1)
     logging.info("Script finished execution.")
+
+if __name__ == "__main__":
+    starter()
