@@ -85,6 +85,18 @@ def get_latest_bill_no():
         no = bill_no.get('bill_no', None)
     return jsonify(no)
 
+@app.route('/getLastItemNo', methods = ['GET'])
+def get_latest_item_no():
+    item = items_table.aggregate(
+        [
+            {"$match": {"id": {"$lt": 10000}}},
+            {"$group": {"_id": None, "id": {"$max": "$id"}}}
+        ]
+    )
+    for item_no in item:
+        no = item_no.get('id', None)
+    return jsonify(no)
+
 @app.route("/help", methods = ['GET'])
 def helper_function():
     return jsonify(
