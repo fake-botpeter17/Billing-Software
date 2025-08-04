@@ -38,6 +38,7 @@ from qt_helper import BillTableColumn
 from utils import User
 from utils import Bill_ as Bill
 from api import get_Api
+from printer.prnt_utils import ReceiptPrinter
 pathJoiner = path.join
 abspath = path.abspath
 
@@ -48,7 +49,7 @@ if CURR_PLATFORM == 'Windows':
 elif CURR_PLATFORM == 'Linux':
     import subprocess
 
-
+printer = ReceiptPrinter(0x154F, 0x154F, interface=1)
 DIREC = Path(__file__).resolve().parent
 
 #Importing Punctuations for Password Validation
@@ -733,6 +734,25 @@ class BMS_Home_GUI(QMainWindow):
             "qnty_list": qnty_list,
         }
 
+    def getItemList(self) -> list[dict[str, str | int | float]]:
+        res: list[dict[str, str | int | float]] = []
+        for key in Bill.getCart():
+            curROW = Bill.getRowNumber(key)
+            name = self.getText(curROW, BillTableColumn.Name)
+            if name != "":
+                quantity = self.getText(curROW, BillTableColumn.Qnty)
+                rate = self.getText(curROW, BillTableColumn.Rate)
+                amount = round(int(quantity) * float(rate), 2)
+                res.append(
+                    {
+                        "name" : name,
+                        "rate" : float(rate),
+                        "qty" : int(quantity),
+                        "amount" : float(amount)
+                    }
+                )
+        return res
+
     def log_bill(self):
         logging.info("log_bill called.")
         if Bill.isEmpty():
@@ -753,7 +773,16 @@ class BMS_Home_GUI(QMainWindow):
             bill_time = datetime.now().time().strftime("%H:%M:%S")
             billed_by = "{} ({})".format(*User.getNameDesignation())
             logging.info(f"Generating bill: number={bill_number}, date={bill_date}, time={bill_time}, billed_by={billed_by}")
-
+            printer.print_receipt(
+                store_name=company_name,
+                address_lines= [address1, address2],
+                bill_no=bill_number,
+                billed_by=billed_by.split()[0],
+                items=self.getItemList(), #TODO
+                total=nettotal,
+                discount=discount,
+                net_total= nettotal - discount
+            )
             # Set the font and font size
             font_name = "Helvetica"
             font_size = 10
