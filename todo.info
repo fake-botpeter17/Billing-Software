@@ -1,4 +1,2 @@
 #TODO#
-1. Should Add Helper class to api
-2. Should add add stock gui and view stock gui 
-3. Sales analysis
+1. @BillingManagementSystem.py:52 => Hardcoded Vendor and Product ID for Printer.
