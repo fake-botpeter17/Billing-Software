@@ -66,18 +66,6 @@ logging.basicConfig(
 )
 logging.info("Billing Management System started.")
 
-def run_check_server_periodically():
-    def check_server_task():
-        while True:
-            try:
-                checkServer(ping=False, verbose=False)
-                # logging.info("Server check completed successfully.")
-            except Exception as e:
-                logging.error(f"Error during server check: {e}", exc_info=True)
-            Event().wait(180)  # Wait for 3 minutes (180 seconds)
-
-    thread = Thread(target=check_server_task, daemon=True)
-    thread.start()
 
 def Init() -> None:
     logging.info("Init: Attempting to connect to server...")
