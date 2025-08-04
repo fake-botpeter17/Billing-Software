@@ -18,7 +18,8 @@ bms.log
 My_Icon_Resized_Pro.jpg
 BMS Backup.sql
 test/*
-__pycache__/*
+*/__pycache__/*
+__pycache__
 test.ipynb
 Resources/icofi.ico
 Resources/lgfi.jpeg
@@ -38,3 +39,5 @@ queryFormat.py
 queryFormat_custom.py
 BillingManagementSystem_Temp.py
 auto.py
+Barcodes/batch_number.json
+*.env
