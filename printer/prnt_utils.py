@@ -1,5 +1,6 @@
 from escpos.printer import Usb
 from datetime import datetime
+from PIL import Image
 
 
 class ReceiptPrinter:
@@ -27,9 +28,12 @@ class ReceiptPrinter:
         bill_date = bill_date or now.strftime("%d.%m.%Y")
         bill_time = bill_time or now.strftime("%H:%M:%S")
 
+        self.printer.set(align='center')
+        self.printer.image(Image.open("Resources/bw_logo.png").resize((220, 200)))
+
         # HEADER
-        self.printer.set(align='center', bold=True, width=2, height=2)
-        self.printer.text(f"{store_name}\n")
+        # self.printer.set(align='center', bold=True, width=2, height=3)
+        # self.printer.text(f"{store_name}\n")
         self.printer.set(align='center', bold=False, width=1, height=1)
         for line in address_lines:
             self.printer.text(f"{line}\n")
@@ -37,27 +41,27 @@ class ReceiptPrinter:
 
         # BILL INFO
         self.printer.set(align='left')
-        self.printer.text(f"Bill No: {bill_no}\n")
-        self.printer.text(f"Bill Date: {bill_date}    Bill Time: {bill_time}\n")
-        self.printer.text(f"Billed By: {billed_by}\n\n")
+        self.printer.text(f"Bill No: {bill_no}\t\t     Billed By: {billed_by}\n")
+        self.printer.text(f"Bill Date: {bill_date}        Bill Time: {bill_time}\n\n")
 
         # TABLE HEADER
-        self.printer.text("S.No. Name             Rate Qnty Amount\n")
-        self.printer.text("----------------------------------------\n")
+        self.printer.text("S.No.      Name        Rate\t Qnty\t Amount\n")
+        self.printer.text("------------------------------------------------\n")
 
         for i, item in enumerate(items, 1):
-            name = item['name'][:16]
+            name = item['name'][:14]
             rate = f"{item['rate']:.2f}"
             qty = str(item['qty'])
             amt = f"{item['amount']:.2f}"
-            self.printer.text(f"{i:<4}{name:<17}{rate:<6}{qty:<5}{amt:<7}\n")
+            self.printer.text(f"{i:^4}   {name:<16}{round(float(rate),2):<6}     {qty:<5} {round(float(amt),2):<7}\n")
 
-        self.printer.text("----------------------------------------\n")
+        self.printer.text("------------------------------------------------\n")
+        self.printer.set('left')
         self.printer.text(f"Total        : Rs. {total:.2f}\n")
         self.printer.text(f"Discount     : Rs. {discount:.2f}\n")
+        self.printer.set('left', bold=True)
         self.printer.text(f"Net Total    : Rs. {net_total:.2f}/-\n\n")
-
-        # FOOTER
+        # # FOOTER
         self.printer.set(align='center')
         self.printer.text("Thank you! Visit Again!\n")
         self.printer.cut()
