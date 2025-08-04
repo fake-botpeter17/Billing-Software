@@ -1,20 +1,35 @@
 @echo off
-setlocal enabledelayedexpansion
-cd "E:\Billing-Software\"
+setlocal
+echo Starting Billing Management System...
+echo.
 
-echo Checking server status... (waiting up to 60s)
+:: Get the directory of this .bat file
+set "PROJECT_DIR=%~dp0"
+cd /d "%PROJECT_DIR%"
 
-for /f "delims=" %%i in ('C:\Users\nebin\AppData\Local\Programs\Python\Python313\python.exe "E:\Billing-Software\checkServer.py"') do set status=%%i
-
-echo Status: !status!
-
-if /i "!status!"=="CONNECTED" (
-    echo Server connected.
-    timeout /t 4 >nul
-    start "" "C:/Users/nebin/AppData/Local/Programs/Python/Python313/pythonw.exe" "E:\Billing-Software\BillingManagementSystem.py"
-) else (
-    echo Server not connected. Please try again later.
+:: Check if virtual environment exists
+if not exist ".venv\" (
+    echo [ERROR] Virtual environment not found at: %PROJECT_DIR%.venv
+    echo Run: python -m venv .venv
     pause
+    exit /b 1
 )
 
-endlocal    
+:: Activate virtual environment
+call ".venv\Scripts\activate.bat"
+
+:: Check server
+echo Checking server status...
+python checkServer.py
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Server check failed. Please check configuration.
+    pause
+    exit /b 1
+)
+
+:: Launch GUI app silently (no CMD window)
+echo Launching Billing Management System...
+start "" ".venv\Scripts\pythonw.exe" BillingManagementSystem.py
+
+endlocal
+exit
