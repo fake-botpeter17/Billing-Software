@@ -4,7 +4,6 @@ import platform
 import subprocess
 import os
 from os import path, makedirs
-from threading import Thread, Event
 from enum import StrEnum, auto
 from typing import LiteralString
 from requests import post
@@ -34,8 +33,8 @@ from sys import exit as exi
 import logging
 # Custom Imports
 from utils.server import get_Api, run_check_server_periodically
-from qt_helper import BillTableColumn
 from utils.types import User, Bill_ as Bill
+from utils.enums import *
 from printer.prnt_utils import ReceiptPrinter
 pathJoiner = path.join
 abspath = path.abspath

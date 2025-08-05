@@ -14,9 +14,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from pyautogui import press
-from requests import get, post
-from api import get_Api
-from qt_helper import QueryFormatterColumn
+from requests import post
+from utils.server import get_Api
+from utils.enums import QueryFormatterColumn
 from os import path
 pathJoiner = path.join
 
