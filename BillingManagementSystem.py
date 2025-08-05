@@ -33,11 +33,9 @@ from datetime import datetime, date
 from sys import exit as exi
 import logging
 # Custom Imports
-from checkServer import checkServer
+from utils.server import get_Api, run_check_server_periodically
 from qt_helper import BillTableColumn
-from utils import User
-from utils import Bill_ as Bill
-from api import get_Api
+from utils.types import User, Bill_ as Bill
 from printer.prnt_utils import ReceiptPrinter
 pathJoiner = path.join
 abspath = path.abspath
