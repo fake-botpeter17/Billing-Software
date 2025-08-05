@@ -1,9 +1,21 @@
 from threading import Thread, Event
-from pickle import load
 from requests import get
 from os.path import join as pathJoiner
 from logging import error
- 
+from pickle import dump,load
+
+def Set_api(api_key: str) -> bool:
+    if api_key is None or api_key == "":
+        raise ValueError("API key cannot be None or empty")
+    with open(pathJoiner("Resources", "sak.dat"), 'wb') as file:
+        data = api_key.encode("utf-32")
+        dump(data, file)
+    return True
+
+def view_API() -> str:
+    with open(pathJoiner("Resources", "sak.dat"), 'rb') as file:
+        return load(file).decode("utf-32")
+
 def run_check_server_periodically():
     def check_server_task():
         while True:
