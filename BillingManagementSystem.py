@@ -35,7 +35,7 @@ import logging
 from utils.server import get_Api, run_check_server_periodically
 from utils.types import User, Bill_ as Bill
 from utils.enums import *
-from printer.prnt_utils import ReceiptPrinter
+from utils.printer import ReceiptPrinter
 pathJoiner = path.join
 abspath = path.abspath
 
