@@ -175,3 +175,23 @@ class Bill_:
             return
         for item in items_cache:
             cls.__Items[item["id"]] = item
+
+class Item:
+    def __init__(self, id: int = None, name :str = None, cost_price :int | float = None, selling_price :int | float = None, qnty : int = None) -> None:
+        self.id = id
+        self.name = name
+        self.cost_price = cost_price
+        self.selling_price = selling_price
+        self.qnty = qnty
+        logger.debug(f"Created new Item with ID: {id}")
+    
+    def getObj(self):
+        obj = {'id':self.id, 'name': f'{self.name}', 'cp': self.cost_price, 'qnty': self.qnty, 'added': round(self.cost_price * 1.08, 2), 'sp': self.selling_price}
+        logger.debug(f"Generated object for Item {self.id}: {obj}")
+        return obj
+
+    def isValid(self) -> bool:
+        valid = self.id and self.name and self.cost_price and self.selling_price and self.qnty
+        if not valid:
+            logger.warning(f"Invalid item data for ID {self.id}")
+        return valid

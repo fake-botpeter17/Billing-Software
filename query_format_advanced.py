@@ -17,6 +17,7 @@ from pyautogui import press
 from requests import post
 from utils.server import get_Api
 from utils.enums import QueryFormatterColumn
+from utils.types import Item
 from os import path
 pathJoiner = path.join
 
@@ -30,26 +31,6 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-
-class Item:
-    def __init__(self, id: int = None, name :str = None, cost_price :int | float = None, selling_price :int | float = None, qnty : int = None) -> None:
-        self.id = id
-        self.name = name
-        self.cost_price = cost_price
-        self.selling_price = selling_price
-        self.qnty = qnty
-        logger.debug(f"Created new Item with ID: {id}")
-    
-    def getObj(self):
-        obj = {'id':self.id, 'name': f'{self.name}', 'cp': self.cost_price, 'qnty': self.qnty, 'added': round(self.cost_price * 1.08, 2), 'sp': self.selling_price}
-        logger.debug(f"Generated object for Item {self.id}: {obj}")
-        return obj
-
-    def isValid(self) -> bool:
-        valid = self.id and self.name and self.cost_price and self.selling_price and self.qnty
-        if not valid:
-            logger.warning(f"Invalid item data for ID {self.id}")
-        return valid
 
 class QueryFormatterGUI(QMainWindow):
     Bill_Table : QTableWidget
@@ -160,7 +141,6 @@ class QueryFormatterGUI(QMainWindow):
     
     def uploadItems(self, items):
         logger.info(f"Attempting to upload {len(items)} items to database")
-        from api import get_Api
         try:
             res = post(url = get_Api() + "/updateStock", json=items)
             logger.info("Upload successful")
