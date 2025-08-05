@@ -48,8 +48,14 @@ if CURR_PLATFORM == 'Windows':
     from win32api import ShellExecute
 elif CURR_PLATFORM == 'Linux':
     import subprocess
-
-printer = ReceiptPrinter(0x154F, 0x154F, interface=1)
+try:
+    printer = ReceiptPrinter(0x154F, 0x154F, interface=1)
+except RuntimeError:
+    messagebox.showerror(
+        title = 'Printer Initialization Error!',
+        message = 'Receipt Printer Initalization Failed! Check Connection!'
+        )
+    exit()
 DIREC = Path(__file__).resolve().parent
 
 #Importing Punctuations for Password Validation
