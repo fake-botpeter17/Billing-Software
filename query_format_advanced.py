@@ -61,6 +61,7 @@ class QueryFormatterGUI(QMainWindow):
         self.show()
         self.setup()
         press('tab')
+        typewrite(self.getLastItemNo())
         logger.info("QueryFormatterGUI initialization complete")
         
     def setup(self):
@@ -146,6 +147,15 @@ class QueryFormatterGUI(QMainWindow):
             return res.content
         except Exception as e:
             logger.error(f"Failed to upload items: {str(e)}\n\nItems: {items}")
+            return None
+        
+    def getLastItemNo(self):
+        logger.info("Getting last item no")
+        try:
+            res = get(url = get_Api() + "/getLastItemNo")
+            return res.content
+        except Exception as e:
+            logger.error(f"Failed to get last item no: {str(e)}")
             return None
 
     def setCellTracking(self, mode: bool) -> None:
