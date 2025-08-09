@@ -4,7 +4,6 @@ import platform
 import subprocess
 import os
 from os import path, makedirs
-from threading import Thread, Event
 from enum import StrEnum, auto
 from typing import LiteralString
 from requests import post
@@ -33,12 +32,10 @@ from datetime import datetime, date
 from sys import exit as exi
 import logging
 # Custom Imports
-from checkServer import checkServer
-from qt_helper import BillTableColumn
-from utils import User
-from utils import Bill_ as Bill
-from api import get_Api
-from printer.prnt_utils import ReceiptPrinter
+from utils.server import get_Api, run_check_server_periodically
+from utils.types import User, Bill_ as Bill
+from utils.enums import *
+from utils.printer import ReceiptPrinter
 pathJoiner = path.join
 abspath = path.abspath
 
@@ -72,18 +69,6 @@ logging.basicConfig(
 )
 logging.info("Billing Management System started.")
 
-def run_check_server_periodically():
-    def check_server_task():
-        while True:
-            try:
-                checkServer(ping=False, verbose=False)
-                # logging.info("Server check completed successfully.")
-            except Exception as e:
-                logging.error(f"Error during server check: {e}", exc_info=True)
-            Event().wait(180)  # Wait for 3 minutes (180 seconds)
-
-    thread = Thread(target=check_server_task, daemon=True)
-    thread.start()
 
 def Init() -> None:
     logging.info("Init: Attempting to connect to server...")

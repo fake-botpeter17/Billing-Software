@@ -13,12 +13,16 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
-from pyautogui import press, typewrite
-from requests import get, post
-from api import get_Api
-from qt_helper import QueryFormatterColumn
-from os import path
+from pyautogui import press
+from requests import post
+from pyperclip import copy
+from utils.server import get_Api
+from utils.enums import QueryFormatterColumn
+from utils.types import Item
+from os import path, startfile
+from notifypy import Notify
 pathJoiner = path.join
+from utils.barcode import generatePDFs
 
 # Configure logging
 logging.basicConfig(
@@ -31,26 +35,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class Item:
-    def __init__(self, id: int = None, name :str = None, cost_price :int | float = None, selling_price :int | float = None, qnty : int = None) -> None:
-        self.id = id
-        self.name = name
-        self.cost_price = cost_price
-        self.selling_price = selling_price
-        self.qnty = qnty
-        logger.debug(f"Created new Item with ID: {id}")
-    
-    def getObj(self):
-        obj = {'id':self.id, 'name': f'{self.name}', 'cp': self.cost_price, 'qnty': self.qnty, 'added': round(self.cost_price * 1.08, 2), 'sp': self.selling_price}
-        logger.debug(f"Generated object for Item {self.id}: {obj}")
-        return obj
-
-    def isValid(self) -> bool:
-        valid = self.id and self.name and self.cost_price and self.selling_price and self.qnty
-        if not valid:
-            logger.warning(f"Invalid item data for ID {self.id}")
-        return valid
-
 class QueryFormatterGUI(QMainWindow):
     Bill_Table : QTableWidget
     Query_Button :QPushButton
@@ -59,7 +43,6 @@ class QueryFormatterGUI(QMainWindow):
         logger.info("Initializing QueryFormatterGUI")
         self.coordinates: tuple[int,int] = (0,0)
         self.rowManager :dict[int, Item] = dict()
-        from notifypy import Notify
         super(QueryFormatterGUI, self).__init__()
         uic.loadUi(pathJoiner("Resources", "Query_Formatter.ui"), self)
         aspect_ratio = 16 / 9  # aspect ratio
@@ -132,7 +115,6 @@ class QueryFormatterGUI(QMainWindow):
                                        f"There are {len(res)} item/s detected. Upload to DB?",
                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                        QMessageBox.StandardButton.Yes)
-        from pyperclip import copy
         copy(str(res))
         if self.uploadItems(res) and (proceed == QMessageBox.StandardButton.Yes):
             reply = QMessageBox.question(self, "Upload Successfull",
@@ -140,7 +122,6 @@ class QueryFormatterGUI(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 
             if reply == QMessageBox.StandardButton.Yes:
-                from BarcodeHelper import generatePDFs
                 result = generatePDFs(res)
                 if result:
                     r = QMessageBox.question(self,
@@ -150,7 +131,6 @@ class QueryFormatterGUI(QMainWindow):
                     QMessageBox.StandardButton.No)
 
                     if r == QMessageBox.StandardButton.Yes:
-                        from os import startfile
                         for file in result['paths']:
                             startfile(file)
                     else:
@@ -161,7 +141,6 @@ class QueryFormatterGUI(QMainWindow):
     
     def uploadItems(self, items):
         logger.info(f"Attempting to upload {len(items)} items to database")
-        from api import get_Api
         try:
             res = post(url = get_Api() + "/updateStock", json=items)
             logger.info("Upload successful")

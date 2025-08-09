@@ -1,9 +1,5 @@
-"""Helper Module for PyQt6 GUI"""
-
 #Imports 
 from enum import IntEnum
-from pathlib import Path
-
 
 #Global Declaration of Column Position
 class BillTableColumn(IntEnum):
@@ -25,6 +21,3 @@ class QueryFormatterColumn(IntEnum):
     CostPrice = 3
     SellingPrice = 4
     Qnty = 5
-
-if __name__ == '__main__':
-    pass
